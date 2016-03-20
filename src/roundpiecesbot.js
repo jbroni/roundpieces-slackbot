@@ -1,9 +1,11 @@
 const Bot = require('slackbots');
 const util = require('util');
+const fs = require('fs');
 const _ = require('lodash');
 
 const RoundpiecesBot = function Constructor(settings) {
   this.settings = settings;
+  this.settings.name = this.settings.name | 'Roundpieces Administration Bot';
 };
 
 RoundpiecesBot.prototype.run = function () {
@@ -15,6 +17,16 @@ RoundpiecesBot.prototype.run = function () {
 
 RoundpiecesBot.prototype._onStart = function () {
   this.startTime = Date.now();
+
+  fs.readFile(this.settings.listPath, 'utf8', (error, data) => {
+    if (error) {
+      console.log(error);
+    }
+    else {
+      this.peopleList = data.split('\n').filter((entry) => entry !== '');
+    }
+  });
+
   this.postMessageToUser(this.settings.adminUserName,
       'RoundpiecesBot fully activated! Type `help` for a full list of commands.');
 };
@@ -35,6 +47,9 @@ RoundpiecesBot.prototype._onMessage = function (message) {
       case 'status':
         this._printStatus(userName);
         break;
+      case 'next':
+        this._printNext(userName);
+        break;
       default:
         this._printUnknownCommand(userName);
         break;
@@ -45,12 +60,18 @@ RoundpiecesBot.prototype._onMessage = function (message) {
 RoundpiecesBot.prototype._printHelp = function (userName) {
   this.postMessageToUser(userName, `Here is a list of commands:
   • \`help\`, \`?\`: Prints this help
-  • \`status\`: Prints how long I've been alive`);
+  • \`status\`: Prints how long I've been alive
+  • \`next\`: Prints who is going to bring roundpieces next time`
+  );
 };
 
 RoundpiecesBot.prototype._printStatus = function (userName) {
   const uptime = Date.now() - this.startTime;
   this.postMessageToUser(userName, `I have been alive for *${uptime} ms!*`);
+};
+
+RoundpiecesBot.prototype._printNext = function (userName) {
+  this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.peopleList[0]}*`);
 };
 
 RoundpiecesBot.prototype._printUnknownCommand = function (userName) {
