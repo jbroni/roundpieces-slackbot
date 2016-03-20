@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/jbroni/roundpieces-slackbot#readme",
   "dependencies": {
+    "lodash": "^4.6.1",
     "slackbots": "^0.5.1"
   }
 }
