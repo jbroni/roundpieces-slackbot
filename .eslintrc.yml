@@ -48,6 +48,3 @@ rules:
   semi:
     - error
     - always
-  strict:
-    - error
-    - safe
