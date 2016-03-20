@@ -8,7 +8,6 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   constructor(settings) {
     super(settings);
     this.settings = settings;
-    this.settings.name = this.settings.name | 'Roundpieces Administration Bot';
   }
 
   run() {

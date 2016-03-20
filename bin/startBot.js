@@ -7,6 +7,7 @@ const listPath = process.env.ROUNDPIECES_LIST_PATH;
 if (token && adminUserName && listPath) {
   const roundpiecesBot = new RoundpiecesBot({
     token: token,
+    name: 'Roundpieces Administration Bot',
     adminUserName: adminUserName,
     listPath: listPath
   });
