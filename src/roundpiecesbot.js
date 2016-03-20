@@ -5,7 +5,6 @@ const util = require('util');
 
 const RoundpiecesBot = function Constructor(settings) {
   this.settings = settings;
-  this.settings.name = this.settings.name || 'RoundpiecesBot';
 };
 
 RoundpiecesBot.prototype.run = function () {
@@ -16,7 +15,7 @@ RoundpiecesBot.prototype.run = function () {
 };
 
 RoundpiecesBot.prototype._onStart = function () {
-  this.postMessageToUser('jba', 'Hello Jesper');
+  this.postMessageToUser(this.settings.adminUserName, 'RoundpiecesBot fully activated!');
 };
 
 RoundpiecesBot.prototype._onMessage = function (message) {
