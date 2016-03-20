@@ -50,6 +50,9 @@ RoundpiecesBot.prototype._onMessage = function (message) {
       case 'next':
         this._printNext(userName);
         break;
+      case 'list':
+        this._printList(userName);
+        break;
       default:
         this._printUnknownCommand(userName);
         break;
@@ -61,7 +64,8 @@ RoundpiecesBot.prototype._printHelp = function (userName) {
   this.postMessageToUser(userName, `Here is a list of commands:
   • \`help\`, \`?\`: Prints this help
   • \`status\`: Prints how long I've been alive
-  • \`next\`: Prints who is going to bring roundpieces next time`
+  • \`next\`: Prints who is going to bring roundpieces next time
+  • \`list\`: Prints ordered list of people participating in the roundpieces arrangement`
   );
 };
 
@@ -72,6 +76,10 @@ RoundpiecesBot.prototype._printStatus = function (userName) {
 
 RoundpiecesBot.prototype._printNext = function (userName) {
   this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.peopleList[0]}*`);
+};
+
+RoundpiecesBot.prototype._printList = function (userName) {
+  this.postMessageToUser(userName, this.peopleList.join(', '));
 };
 
 RoundpiecesBot.prototype._printUnknownCommand = function (userName) {
