@@ -1,5 +1,3 @@
-'use strict';
-
 const Bot = require('slackbots');
 const util = require('util');
 const _ = require('lodash');

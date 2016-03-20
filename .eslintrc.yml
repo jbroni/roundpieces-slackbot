@@ -1,0 +1,53 @@
+env:
+  es6: true
+  node: true
+extends: 'eslint:recommended'
+parserOptions:
+  sourceType: module
+rules:
+  arrow-body-style:
+    - error
+    - as-needed
+  arrow-parens:
+    - error
+    - always
+  curly:
+    - error
+    - all
+  eqeqeq:
+    - error
+  guard-for-in:
+    - 1
+  indent:
+    - off
+    - 2
+  linebreak-style:
+    - error
+    - unix
+  no-console:
+    - off
+  no-empty-function:
+    - error
+  no-eval:
+    - error
+  no-var:
+    - error
+  prefer-arrow-callback:
+    - 1
+  prefer-const:
+    - 1
+  prefer-rest-params:
+    - 1
+  prefer-spread:
+    - 1
+  prefer-template:
+    - 1
+  quotes:
+    - error
+    - single
+  semi:
+    - error
+    - always
+  strict:
+    - error
+    - safe
