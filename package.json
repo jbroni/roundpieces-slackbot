@@ -1,0 +1,24 @@
+{
+  "name": "roundpieces-slackbot",
+  "version": "0.0.1",
+  "description": "A slack bot for administrating roundpieces",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbroni/roundpieces-slackbot.git"
+  },
+  "keywords": [
+    "slack",
+    "bot",
+    "roundpieces"
+  ],
+  "author": "Jesper Broni Andersen",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jbroni/roundpieces-slackbot/issues"
+  },
+  "homepage": "https://github.com/jbroni/roundpieces-slackbot#readme"
+}
