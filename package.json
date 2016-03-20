@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/jbroni/roundpieces-slackbot/issues"
   },
-  "homepage": "https://github.com/jbroni/roundpieces-slackbot#readme"
+  "homepage": "https://github.com/jbroni/roundpieces-slackbot#readme",
+  "dependencies": {
+    "slackbots": "^0.5.1"
+  }
 }
