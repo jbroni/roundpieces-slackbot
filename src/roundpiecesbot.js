@@ -15,11 +15,26 @@ RoundpiecesBot.prototype.run = function () {
 };
 
 RoundpiecesBot.prototype._onStart = function () {
-  this.postMessageToUser(this.settings.adminUserName, 'RoundpiecesBot fully activated!');
+  this.postMessageToUser(this.settings.adminUserName,
+      'RoundpiecesBot fully activated! Type help for a full list of commands');
 };
 
 RoundpiecesBot.prototype._onMessage = function (message) {
-  console.log(message);
+  if (message.type === 'message') {
+    switch (message.text) {
+      case 'help':
+      case '?':
+        this._printHelp();
+        break;
+      default:
+        console.log(message);
+        break;
+    }
+  }
+};
+
+RoundpiecesBot.prototype._printHelp = function () {
+  console.log('help');
 };
 
 util.inherits(RoundpiecesBot, Bot);
