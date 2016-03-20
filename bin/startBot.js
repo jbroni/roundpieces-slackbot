@@ -1,6 +1,6 @@
 'use strict';
 
-const RoundpiecesBot = require('./src/roundpiecesbot');
+const RoundpiecesBot = require('./../src/roundpiecesbot');
 
 const token = process.env.BOT_API_KEY;
 
