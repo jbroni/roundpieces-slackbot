@@ -14,32 +14,47 @@ RoundpiecesBot.prototype.run = function () {
 };
 
 RoundpiecesBot.prototype._onStart = function () {
+  this.startTime = Date.now();
   this.postMessageToUser(this.settings.adminUserName,
-      'RoundpiecesBot fully activated! Type help for a full list of commands.');
+      'RoundpiecesBot fully activated! Type `help` for a full list of commands.');
 };
 
 RoundpiecesBot.prototype._onMessage = function (message) {
-  if (message.type === 'message') {
+  if (message.type === 'message' && message.user) {
+    const userName = this._getUserNameFromUserId(message.user);
+    if (!userName) {
+      console.error('Unknown user id', message.user);
+      console.log(message);
+      return;
+    }
     switch (message.text) {
       case 'help':
       case '?':
-        this._printHelp(message.user);
+        this._printHelp(userName);
+        break;
+      case 'status':
+        this._printStatus(userName);
         break;
       default:
-        console.log(message);
+        this._printUnknownCommand(userName);
         break;
     }
   }
 };
 
-RoundpiecesBot.prototype._printHelp = function (userId) {
-  const userName = this._getUserNameFromUserId(userId);
-  if (userName) {
-    this.postMessageToUser(userName, 'Here is a list of commands:');
-  }
-  else {
-    console.error('Unknown user id', userId);
-  }
+RoundpiecesBot.prototype._printHelp = function (userName) {
+  this.postMessageToUser(userName, `Here is a list of commands:
+  • \`help\`, \`?\`: Prints this help
+  • \`status\`: Prints how long I've been alive`);
+};
+
+RoundpiecesBot.prototype._printStatus = function (userName) {
+  const uptime = Date.now() - this.startTime;
+  this.postMessageToUser(userName, `I have been alive for *${uptime} ms!*`);
+};
+
+RoundpiecesBot.prototype._printUnknownCommand = function (userName) {
+  this.postMessageToUser(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
 };
 
 RoundpiecesBot.prototype._getUserNameFromUserId = function (userId) {
