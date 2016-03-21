@@ -8,6 +8,7 @@ if (token && adminUserName && listPath) {
   const roundpiecesBot = new RoundpiecesBot({
     token: token,
     name: 'Roundpieces Administration Bot',
+    cronRange: '* * * * * *',
     adminUserName: adminUserName,
     listPath: listPath
   });

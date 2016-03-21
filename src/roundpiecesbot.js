@@ -3,6 +3,7 @@
 const Bot = require('slackbots');
 const fs = require('fs');
 const _ = require('lodash');
+const CronJob = require('cron').CronJob;
 
 const RoundpiecesBot = class RoundpiecesBot extends Bot {
   constructor(settings) {
@@ -24,11 +25,13 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
       }
       else {
         this.peopleList = data.split('\n').filter((entry) => entry !== '');
+
+        new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
+
+        this.postMessageToUser(this.settings.adminUserName,
+            'RoundpiecesBot fully activated! Type `help` for a full list of commands.');
       }
     });
-
-    this.postMessageToUser(this.settings.adminUserName,
-        'RoundpiecesBot fully activated! Type `help` for a full list of commands.');
   }
 
   _onMessage(message) {
@@ -89,6 +92,10 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   _getUserNameFromUserId(userId) {
     const user = _.find(this.users, (user) => user.id === userId);
     return user ? user.name : null;
+  }
+
+  _notifyParticipants() {
+    console.log('notification');
   }
 };
 
