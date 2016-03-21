@@ -16,6 +16,14 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     this.on('message', this._onMessage);
   }
 
+  get next() {
+    return this.participants[0];
+  }
+
+  get participantCount() {
+    return this.participants.length;
+  }
+
   _onStart() {
     this.startTime = Date.now();
 
@@ -24,7 +32,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
         console.log(error);
       }
       else {
-        this.peopleList = data.split('\n').filter((entry) => entry !== '');
+        this.participants = data.split('\n').filter((entry) => entry !== '');
 
         new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
 
@@ -78,11 +86,11 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _printNext(userName) {
-    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.peopleList[0]}*`);
+    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.next}*`);
   }
 
   _printList(userName) {
-    this.postMessageToUser(userName, this.peopleList.join(', '));
+    this.postMessageToUser(userName, this.participants.join(', '));
   }
 
   _printUnknownCommand(userName) {
@@ -95,7 +103,15 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _notifyParticipants() {
-    console.log('notification');
+    this._notifyResponsible();
+  }
+
+  _notifyResponsible() {
+    this.postMessageToUser(this.next,
+        `It is your turn to bring roundpieces next time!
+Please respond before 15.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
+There's currently ${this.participantCount} participants:
+  ${this.participants}`);
   }
 };
 
