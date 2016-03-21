@@ -34,6 +34,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
       else {
         this.participants = data.split('\n').filter((entry) => entry !== '');
 
+        //TODO also let administrator invoke script directly in case of virtual Friday
         new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
 
         this.postMessageToUser(this.settings.adminUserName,
@@ -125,6 +126,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _reject(userName) {
+    //TODO rejection after accept?
     if (userName === this.next) {
       this.postMessageToUser(userName, 'Alright, I\'ll ask the next one on the list to bring them instead.');
       //TODO message next on list
@@ -141,6 +143,8 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
 
   _notifyParticipants() {
     this._notifyResponsible();
+    //TODO notify participants, handle non-slack users
+    //TODO setup CronJob for sending participation list to responsible
   }
 
   _notifyResponsible() {
