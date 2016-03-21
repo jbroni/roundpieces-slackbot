@@ -106,11 +106,22 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   _accept(userName) {
     if (userName === this.next) {
       this.postMessageToUser(userName, 'Thank you! I will notify you at 15.00 with a list of who will be attending the next roundpieces meeting.');
-      //TODO move responsible to end of list
+      this._updateList();
     }
     else {
       this.postMessageToUser(userName, 'You are not the responsible for bringing roundpieces next time.');
     }
+  }
+
+  _updateList() {
+    //TODO handle case where there has been a reject
+    this.participants.push(this.participants.shift()); //Move first participant to end of array
+    fs.writeFile(this.settings.listPath, this.participants.join('\n'), (error) => {
+      if (error) {
+        console.error(error);
+        this.postMessageToUser(this.settings.adminUserName, `Failed to save list due to ${error}`);
+      }
+    });
   }
 
   _reject(userName) {
