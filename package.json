@@ -4,7 +4,7 @@
   "description": "A slack bot for administrating roundpieces",
   "main": "bin/startBot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",
@@ -27,9 +27,12 @@
     "slackbots": "^0.5.1"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.1.0",
     "eslint-config-google": "^0.4.0",
-    "eslint-plugin-react": "^4.2.3"
+    "eslint-plugin-react": "^4.2.3",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3"
   }
 }
