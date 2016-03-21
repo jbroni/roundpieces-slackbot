@@ -141,7 +141,9 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
       this.postMessageToUser(userName, 'Alright, I\'ll ask the next one on the list to bring them instead.');
       const nextUser = this._getNextUser(this.responsible);
       if (!nextUser) {
+        //TODO remember to disable cronjob
         this.postMessageToUser(this.settings.adminUserName, 'Nobody is able to bring roundpieces for the next meeting.');
+        this.responsible = this.participants[0];
       }
       else {
         this.responsible = nextUser;
@@ -173,7 +175,6 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _notifyResponsible() {
-    console.log('notifying ', this.responsible);
     this.postMessageToUser(this.responsible,
         `It is your turn to bring roundpieces next time!
 Please respond before 15.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
