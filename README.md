@@ -1,4 +1,6 @@
 # roundpieces-slackbot
+[![Build Status](https://travis-ci.org/jbroni/roundpieces-slackbot.svg?branch=master)](https://travis-ci.org/jbroni/roundpieces-slackbot)
+
 A slack bot for administration of roundpieces
 
 ## Setup
