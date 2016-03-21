@@ -16,8 +16,12 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     this.on('message', this._onMessage);
   }
 
-  get next() {
-    return this.participants[0];
+  get responsible() {
+    return this._responsible;
+  }
+
+  set responsible(userName) {
+    this._responsible = userName;
   }
 
   get participantCount() {
@@ -29,16 +33,21 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
 
     fs.readFile(this.settings.listPath, 'utf8', (error, data) => {
       if (error) {
-        console.log(error);
+        this._reportError(error);
       }
       else {
         this.participants = data.split('\n').filter((entry) => entry !== '');
+        if (this.participantCount < 1) {
+          this._reportError('No participants in list');
+          return;
+        }
+        this.responsible = this.participants[0];
 
         //TODO also let administrator invoke script directly in case of virtual Friday
         new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
 
         this.postMessageToUser(this.settings.adminUserName,
-            'RoundpiecesBot fully activated! Type `help` for a full list of commands.');
+            `${this.settings.name} fully activated! Type \`help\` for a full list of commands.`);
       }
     });
   }
@@ -47,7 +56,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     if (message.type === 'message' && message.user) {
       const userName = this._getUserNameFromUserId(message.user);
       if (!userName) {
-        console.error('Unknown user id', message.user);
+        this._reportError(`Unknown user id: ${message.user}`);
         console.log(message);
         return;
       }
@@ -93,7 +102,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _printNext(userName) {
-    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.next}*`);
+    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.responsible}*`);
   }
 
   _printList(userName) {
@@ -105,7 +114,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _accept(userName) {
-    if (userName === this.next) {
+    if (userName === this.responsible) {
       this.postMessageToUser(userName, 'Thank you! I will notify you at 15.00 with a list of who will be attending the next roundpieces meeting.');
       this._updateList();
     }
@@ -119,17 +128,23 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     this.participants.push(this.participants.shift()); //Move first participant to end of array
     fs.writeFile(this.settings.listPath, this.participants.join('\n'), (error) => {
       if (error) {
-        console.error(error);
-        this.postMessageToUser(this.settings.adminUserName, `Failed to save list due to ${error}`);
+        this._reportError(`Failed to save list due to ${error}`);
       }
     });
   }
 
   _reject(userName) {
     //TODO rejection after accept?
-    if (userName === this.next) {
+    if (userName === this.responsible) {
       this.postMessageToUser(userName, 'Alright, I\'ll ask the next one on the list to bring them instead.');
-      //TODO message next on list
+      const nextUser = this._getNextUser(this.responsible);
+      if (!nextUser) {
+        this.postMessageToUser(this.settings.adminUserName, 'Nobody is able to bring roundpieces for the next meeting.');
+      }
+      else {
+        this.responsible = nextUser;
+        this._notifyResponsible();
+      }
     }
     else {
       this.postMessageToUser(userName, 'You are not the responsible for bringing roundpieces next time.');
@@ -141,18 +156,32 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     return user ? user.name : null;
   }
 
+  _getNextUser(userName) {
+    const currentIndex = _.findIndex(this.participants, (participant) => participant === userName);
+    if (currentIndex >= this.participantCount - 1) {
+      return null;
+    }
+    return this.participants[currentIndex + 1];
+  }
+
   _notifyParticipants() {
     this._notifyResponsible();
     //TODO notify participants, handle non-slack users
-    //TODO setup CronJob for sending participation list to responsible
+    //TODO setup CronJob for sending participation list to responsible, changing the responsible
   }
 
   _notifyResponsible() {
-    this.postMessageToUser(this.next,
+    console.log('notifying ', this.responsible);
+    this.postMessageToUser(this.responsible,
         `It is your turn to bring roundpieces next time!
 Please respond before 15.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
 There's currently ${this.participantCount} participants:
   ${this.participants}`);
+  }
+
+  _reportError(error) {
+    console.error(error);
+    this.postMessageToUser(this.settings.adminUserName, `I'm afraid I've encountered an error: ${error}`);
   }
 };
 
