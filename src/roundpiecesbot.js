@@ -31,25 +31,27 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   _onStart() {
     this.startTime = Date.now();
 
-    fs.readFile(this.settings.listPath, 'utf8', (error, data) => {
-      if (error) {
-        this._reportError(error);
-      }
-      else {
-        this.participants = data.split('\n').filter((entry) => entry !== '');
-        if (this.participantCount < 1) {
-          this._reportError('No participants in list');
-          return;
-        }
-        this.responsible = this.participants[0];
+    fs.readFile(this.settings.listPath, 'utf8', (error, data) => this._setup(error, data));
+  }
 
-        //TODO also let administrator invoke script directly in case of virtual Friday
-        new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
-
-        this.postMessageToUser(this.settings.adminUserName,
-            `${this.settings.name} fully activated! Type \`help\` for a full list of commands.`);
+  _setup(error, data) {
+    if (error) {
+      this._reportError(error);
+    }
+    else {
+      this.participants = data.split('\n').filter((entry) => entry !== '');
+      if (this.participantCount < 1) {
+        this._reportError('No participants in list');
+        return;
       }
-    });
+      this.responsible = this.participants[0];
+
+      //TODO also let administrator invoke script directly in case of virtual Friday
+      new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
+
+      this.postMessageToUser(this.settings.adminUserName,
+          `${this.settings.name} fully activated! Type \`help\` for a full list of commands.`);
+    }
   }
 
   _onMessage(message) {
