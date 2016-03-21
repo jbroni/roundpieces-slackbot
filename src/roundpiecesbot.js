@@ -50,7 +50,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
         console.log(message);
         return;
       }
-      switch (message.text) {
+      switch (message.text.toLowerCase()) {
         case 'help':
         case '?':
           this._printHelp(userName);
@@ -63,6 +63,12 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
           break;
         case 'list':
           this._printList(userName);
+          break;
+        case 'accept':
+          this._accept(userName);
+          break;
+        case 'reject':
+          this._reject(userName);
           break;
         default:
           this._printUnknownCommand(userName);
@@ -95,6 +101,26 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
 
   _printUnknownCommand(userName) {
     this.postMessageToUser(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
+  }
+
+  _accept(userName) {
+    if (userName === this.next) {
+      this.postMessageToUser(userName, 'Thank you! I will notify you at 15.00 with a list of who will be attending the next roundpieces meeting.');
+      //TODO move responsible to end of list
+    }
+    else {
+      this.postMessageToUser(userName, 'You are not the responsible for bringing roundpieces next time.');
+    }
+  }
+
+  _reject(userName) {
+    if (userName === this.next) {
+      this.postMessageToUser(userName, 'Alright, I\'ll ask the next one on the list to bring them instead.');
+      //TODO message next on list
+    }
+    else {
+      this.postMessageToUser(userName, 'You are not the responsible for bringing roundpieces next time.');
+    }
   }
 
   _getUserNameFromUserId(userId) {
