@@ -155,8 +155,11 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   }
 
   _updateList() {
-    //TODO handle case where there has been a reject
-    this.participants.push(this.participants.shift()); //Move first participant to end of array
+    //Move responsible to end of list
+    const responsible = this._getResponsible();
+    _.pull(this.participants, responsible);
+    this.participants.push(responsible);
+    //Persist list
     fs.writeFile(this.settings.listPath, this._getParticipantUserNames().join('\n'), (error) => {
       if (error) {
         this._reportError(`Failed to save list due to ${error}`);

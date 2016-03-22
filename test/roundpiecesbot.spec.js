@@ -1,6 +1,8 @@
 const expect = require('chai').expect;
+const sinon = require('sinon');
 const RoundpiecesBot = require('../src/roundpiecesbot');
 const Participant = require('../src/participant');
+const fs = require('fs');
 
 describe('Roundpieces Bot', () => {
   'use strict';
@@ -84,6 +86,30 @@ describe('Roundpieces Bot', () => {
       roundpiecesBot._setResponsible(participants[1]);
       roundpiecesBot._setResponsible(participants[2]);
       expect(roundpiecesBot._getResponsible().id).to.equal(participants[2].id);
+    });
+  });
+
+  describe('_updateList()', () => {
+    beforeEach(() => {
+      roundpiecesBot._setup(null, list);
+      sinon.stub(fs, 'writeFile');
+
+      roundpiecesBot._setResponsible(participants[1]);
+      roundpiecesBot._updateList();
+    });
+
+    afterEach(() => {
+      fs.writeFile.restore();
+    });
+
+    it('should move the responsible to the end of the list', () => {
+      expect(roundpiecesBot.participants[roundpiecesBot._getParticipantCount() - 1].id).to.equal(participants[1].id);
+    });
+
+    it('should preserve the rest of the list', () => {
+      expect(roundpiecesBot.participants[0].id).to.equal(participants[0].id);
+      expect(roundpiecesBot.participants[1].id).to.equal(participants[2].id);
+      expect(roundpiecesBot.participants[2].id).to.equal(participants[3].id);
     });
   });
 
