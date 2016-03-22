@@ -104,6 +104,12 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
         case 'reject':
           this._reject(participant);
           break;
+        case 'yes':
+          this._attending(participant);
+          break;
+        case 'no':
+          this._notAttending(participant);
+          break;
         default:
           this._printUnknownCommand(participant.username);
           break;
@@ -179,6 +185,16 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
     }
   }
 
+  _attending(participant) {
+    participant.attending = 'yes';
+    this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you\'ll *be attending* tomorrow.');
+  }
+
+  _notAttending(participant) {
+    participant.attending = 'no';
+    this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
+  }
+
   _getUserNameFromUserId(userId) {
     const user = _.find(this.users, (user) => user.id === userId);
     return user ? user.name : null;
@@ -208,7 +224,7 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   _notifyParticipants() {
     this._notifyResponsible();
     this._queryForAttendance();
-    //TODO setup CronJob for sending participation list to responsible, changing the responsible
+    //TODO setup CronJob for sending participation list to responsible, changing the responsible, resetting attendance
   }
 
   _notifyResponsible() {
@@ -227,7 +243,6 @@ There's currently ${this._getParticipantCount()} participants:
             `To help ${this._getResponsible().username} buying the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
 If you won't attend, please respond \`no\`.`));
-
   }
 
   _reportError(error) {
