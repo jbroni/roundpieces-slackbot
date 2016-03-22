@@ -1,5 +1,6 @@
 const expect = require('chai').expect;
 const RoundpiecesBot = require('../src/roundpiecesbot');
+const Participant = require('../src/participant');
 
 describe('Roundpieces Bot', () => {
   'use strict';
@@ -33,11 +34,18 @@ describe('Roundpieces Bot', () => {
       id: 'ide'
     }
   ];
-  const participants = 'a\nb\nc\nd';
+  const list = 'a\nb\nc\nd';
+  let participants = [];
 
   beforeEach(() => {
     roundpiecesBot = new RoundpiecesBot(settings);
     roundpiecesBot.users = users;
+    participants = [
+      new Participant(users[0].id, users[0].name),
+      new Participant(users[1].id, users[1].name),
+      new Participant(users[2].id, users[2].name),
+      new Participant(users[3].id, users[3].name)];
+    participants[0].responsible = true;
   });
 
   it('should be initialized with settings', () => {
@@ -46,21 +54,42 @@ describe('Roundpieces Bot', () => {
 
   describe('_setup()', () => {
     beforeEach(() => {
-      roundpiecesBot._setup(null, participants);
+      roundpiecesBot._setup(null, list);
     });
 
-    it('should create a participant array', () => {
-      expect(roundpiecesBot.participants).to.deep.equal(participants.split('\n'));
+    it('should create a participant array with the correct number of users', () => {
+      expect(roundpiecesBot.participants.length).to.equal(4);
+    });
+
+    it('should create a participant array with the correct users', () => {
+      expect(roundpiecesBot.participants).to.deep.equal(participants);
     });
 
     it('should set the responsible to the first participant', () => {
-      expect(roundpiecesBot.responsible).to.equal('a');
+      expect(roundpiecesBot._getResponsible()).to.deep.equal(participants[0]);
+    });
+  });
+
+  describe('_setResponsible()', () => {
+    beforeEach(() => {
+      roundpiecesBot._setup(null, list);
+    });
+
+    it('should correctly set the responsible', () => {
+      roundpiecesBot._setResponsible(participants[1]);
+      expect(roundpiecesBot._getResponsible().id).to.equal(participants[1].id);
+    });
+
+    it('should be able to change the responsible multiple times', () => {
+      roundpiecesBot._setResponsible(participants[1]);
+      roundpiecesBot._setResponsible(participants[2]);
+      expect(roundpiecesBot._getResponsible().id).to.equal(participants[2].id);
     });
   });
 
   describe('_getUserNameFromUserId', () => {
     beforeEach(() => {
-      roundpiecesBot._setup(null, participants);
+      roundpiecesBot._setup(null, list);
     });
 
     it('should get the user from the user id', () => {
@@ -72,21 +101,21 @@ describe('Roundpieces Bot', () => {
     });
   });
 
-  describe('_getNextUser()', () => {
+  describe('_getNextParticipant()', () => {
     beforeEach(() => {
-      roundpiecesBot._setup(null, participants);
+      roundpiecesBot._setup(null, list);
     });
 
-    it('should find the participant', () => {
-      expect(roundpiecesBot._getNextUser('a')).to.equal('b');
+    it('should find the next participant', () => {
+      expect(roundpiecesBot._getNextParticipant(participants[0])).to.deep.equal(participants[1]);
     });
 
     it('should return null for the last participant', () => {
-      expect(roundpiecesBot._getNextUser('d')).to.equal(null);
+      expect(roundpiecesBot._getNextParticipant(participants[3])).to.equal(null);
     });
 
     it('should return the first participant for an unknown user', () => {
-      expect(roundpiecesBot._getNextUser('unknown')).to.equal('a');
+      expect(roundpiecesBot._getNextParticipant(new Participant('unknown_id', 'unknown_name'))).to.deep.equal(participants[0]);
     });
   });
 });
