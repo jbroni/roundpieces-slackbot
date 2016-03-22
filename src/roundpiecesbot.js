@@ -139,7 +139,8 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
 
   _accept(participant) {
     if (participant.responsible) {
-      this.postMessageToUser(participant.username, 'Thank you! I will notify you at 15.00 with a list of who will be attending the next roundpieces meeting.');
+      this.postMessageToUser(participant.username, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
+      participant.attending = 'yes';
       this._updateList();
     }
     else {
@@ -213,13 +214,19 @@ const RoundpiecesBot = class RoundpiecesBot extends Bot {
   _notifyResponsible() {
     this.postMessageToUser(this._getResponsible().username,
         `It is your turn to bring roundpieces next time!
-Please respond before 15.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
+Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
 There's currently ${this._getParticipantCount()} participants:
   ${this._getParticipantUserNames().join(', ')}`);
   }
 
   _queryForAttendance() {
     //TODO handle non-slack users
+    this.participants
+        .filter((participant) => !participant.responsible)
+        .forEach((participant) => this.postMessageToUser(participant.username,
+            `To help ${this._getResponsible().username} buying the correct number of roundpieces, please respond to this message before 12.00 today.
+Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
+If you won't attend, please respond \`no\`.`));
 
   }
 
