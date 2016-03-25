@@ -83,13 +83,38 @@ class RoundpiecesBot extends Bot {
         return;
       }
       this._setResponsible(this.participants[0]);
-
-      //TODO also let administrator invoke script directly in case of virtual Friday
-      new CronJob(this.settings.cronRange, () => this._notifyParticipants(), null, true);
+      this._setupCronJobs();
 
       this.postMessageToUser(this.settings.adminUserName,
           `${this.settings.name} fully activated! Type \`help\` for a full list of commands.`);
     }
+  }
+
+  _setupCronJobs() {
+    const cronRanges = this.settings.cronRanges;
+    //TODO also let administrator invoke script directly in case of virtual Friday
+    new CronJob(cronRanges.start, () => this._startResponsibleSearch(), null, true);
+    new CronJob(cronRanges.end, () => this._endResponsibleSearch(), null, true);
+    new CronJob(cronRanges.reset, () => this._reset(), null, true);
+  }
+
+  _startResponsibleSearch() {
+    this.state = States.ASKED_RESPONSBILE;
+    this._notifyParticipants();
+  }
+
+  _endResponsibleSearch() {
+    if (this.state === States.FOUND_RESPONSIBLE) {
+      //send participation list to responsible
+    }
+    else {
+      //notify administrator to take action
+    }
+  }
+
+  _reset() {
+    //reset attendance
+    //reset responsible
   }
 
   _onMessage(message) {
@@ -244,8 +269,6 @@ class RoundpiecesBot extends Bot {
   _notifyParticipants() {
     this._notifyResponsible();
     this._queryForAttendance();
-    this.state = States.ASKED_RESPONSBILE;
-    //TODO setup CronJob for sending participation list to responsible, changing the responsible, resetting attendance
   }
 
   _notifyResponsible() {

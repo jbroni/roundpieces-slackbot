@@ -4,13 +4,21 @@ const token = process.env.ROUNDPIECES_API_KEY;
 const adminUserName = process.env.ROUNDPIECES_ADMIN_USERNAME;
 const listPath = process.env.ROUNDPIECES_LIST_PATH;
 
+const startSearch = '00 * * * * *';
+const endSearch = '30 * * * * *';
+const resetSearch = '55 * * * * *';
+
 if (token && adminUserName && listPath) {
   const roundpiecesBot = new RoundpiecesBot({
     token: token,
     name: 'Roundpieces Administration Bot',
-    cronRange: '00 * * * * *',
     adminUserName: adminUserName,
-    listPath: listPath
+    listPath: listPath,
+    cronRanges: {
+      start: startSearch,
+      end: endSearch,
+      reset: resetSearch
+    }
   });
 
   roundpiecesBot.run();

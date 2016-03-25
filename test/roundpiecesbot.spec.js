@@ -10,7 +10,11 @@ describe('Roundpieces Bot', () => {
   const settings = {
     token: '123456789',
     name: 'Roundpieces Administration Bot',
-    cronRange: '00,10,20,30,40,50 * * * * *',
+    cronRanges: {
+      start: '00 * * * * *',
+      end: '30 * * * * *',
+      reset: '55 * * * * *'
+    },
     adminUserName: 'admin',
     listPath: '~/list'
   };
