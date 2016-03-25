@@ -89,6 +89,7 @@ class RoundpiecesBot extends Bot {
 
   _reset() {
     this.model.reset();
+    this.state = States.IDLE;
   }
 
   _onMessage(message) {
