@@ -11,7 +11,8 @@ const States = Object.freeze({
   IDLE: 'idle',
   ASKED_RESPONSBILE: 'asked responsible',
   FOUND_RESPONSIBLE: 'found responsible',
-  NO_RESPONSIBLE: 'no responsible'
+  NO_RESPONSIBLE: 'no responsible',
+  AWAITING_MEETING: 'awaiting meeting'
 });
 
 class RoundpiecesBot extends Bot {
@@ -85,6 +86,7 @@ class RoundpiecesBot extends Bot {
         //No attendance - don't do anything
         break;
     }
+    this.state = States.AWAITING_MEETING;
   }
 
   _reset() {
@@ -158,65 +160,96 @@ class RoundpiecesBot extends Bot {
   }
 
   _accept(participant) {
-    if (participant.responsible) {
-      this.messageService.accepted(participant.username);
-      participant.attending = AttendanceEnum.ATTENDING;
-      this.state = States.FOUND_RESPONSIBLE;
-      this._updateList();
-    }
-    else {
+    if (!participant.responsible) {
       this.messageService.notResponsible(participant.username);
+      return;
     }
+
+    if (this.state !== States.ASKED_RESPONSBILE) {
+      this.messageService.wrongTime(participant.username);
+      return;
+    }
+
+    this.messageService.accepted(participant.username);
+    participant.attending = AttendanceEnum.ATTENDING;
+    this.state = States.FOUND_RESPONSIBLE;
+    this._updateList();
   }
 
   _updateList() {
     this.model.updateList();
     //Persist list
-    fs.writeFile(this.settings.listPath, this.model.getParticipantUserNames().join('\n'), (error) => {
+    const list = this.model.getParticipantUserNames().join('\n');
+    fs.writeFile(this.settings.listPath, list, (error) => {
       if (error) {
-        this._reportError(`Failed to save list due to ${error}`);
+        this._reportError(`Failed to save list due to ${error}. List is currently: ${list}`);
       }
     });
   }
 
   _reject(participant) {
-    //TODO rejection after accept?
-    if (participant.responsible) {
-      this.messageService.rejected(participant.username);
-      participant.attending = AttendanceEnum.NOT_ATTENDING;
-      const nextUser = this.model.getNextParticipant(participant);
-      if (!nextUser) {
-        this.state = States.NO_RESPONSIBLE;
-        this.messageService.nobodyAttending();
-        this.model.setResponsible(this.model.participants[0]);
-      }
-      else {
-        this.model.setResponsible(nextUser);
-        this.messageService.notifyResponsible();
-      }
+    if (!participant.responsible) {
+      this.messageService.notResponsible(participant.username);
+      return;
+    }
+
+    if (this.state !== States.ASKED_RESPONSBILE) {
+      this.messageService.wrongTime(participant.username);
+      return;
+    }
+
+    this.messageService.rejected(participant.username);
+    participant.attending = AttendanceEnum.NOT_ATTENDING;
+    const nextUser = this.model.getNextParticipant(participant);
+    if (!nextUser) {
+      this.state = States.NO_RESPONSIBLE;
+      this.messageService.nobodyAttending();
+      this.model.setResponsible(this.model.participants[0]);
     }
     else {
-      this.messageService.notResponsible(participant.username);
+      this.model.setResponsible(nextUser);
+      this.messageService.notifyResponsible();
     }
   }
 
   _attending(participant) {
-    //TODO correct state?
+    if (participant.responsible) {
+      this.messageService.isResponsible();
+      return;
+    }
+
+    if (!this._canChangeAttendanceStatus()) {
+      this.messageService.wrongTime(participant.username);
+      return;
+    }
+
     participant.attending = AttendanceEnum.ATTENDING;
     this.messageService.attending(participant.username);
   }
 
   _notAttending(participant) {
-    //TODO correct state?
+    if (participant.responsible) {
+      this.messageService.isResponsible();
+      return;
+    }
+
+    if (!this._canChangeAttendanceStatus()) {
+      this.messageService.wrongTime(participant.username);
+      return;
+    }
+
     participant.attending = AttendanceEnum.NOT_ATTENDING;
     this.messageService.notAttending(participant.username);
+  }
+
+  _canChangeAttendanceStatus() {
+    return this.state === States.ASKED_RESPONSBILE || this.state === States.FOUND_RESPONSIBLE;
   }
 
   _changeResponsible(newResposibleUserName) {
     const responsible = this.model.getParticipantFromUserName(newResposibleUserName);
     if (responsible) {
       this.model.setResponsible(responsible);
-      this.state = States.FOUND_RESPONSIBLE;
       this._updateList();
       this.messageService.participationList();
       this.messageService.responsibleChanged(responsible.username);

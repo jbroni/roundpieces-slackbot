@@ -33,11 +33,16 @@ class MessageService {
   }
 
   help(userName) {
+    //TODO yes, no, accept, reject, admin
     this.sendMessage(userName, `Here is a list of commands:
   • \`help\`, \`?\`: Prints this help
   • \`status\`: Prints how long I've been alive
   • \`next\`: Prints who is going to bring roundpieces next time
   • \`list\`: Prints ordered list of people participating in the roundpieces arrangement`);
+  }
+
+  isResponsible() {
+    this._messageResponsible('You are responsible for bringing the roundpieces for the next meeting. Please use `accept` or `reject` to indicate your attendance status instead.');
   }
 
   list(userName) {
@@ -122,6 +127,10 @@ If you won't attend, please respond \`no\`.`));
 
   unknownCommand(userName) {
     this.sendMessage(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
+  }
+
+  wrongTime(userName) {
+    this.sendMessage(userName, `You cannot do that now. Contact ${this.model.admin} if you think you should be able to.`);
   }
 
   _messageAdmin(message) {
