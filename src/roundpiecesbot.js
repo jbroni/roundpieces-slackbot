@@ -105,7 +105,7 @@ class RoundpiecesBot extends Bot {
 
   _endResponsibleSearch() {
     if (this.state === States.FOUND_RESPONSIBLE) {
-      //send participation list to responsible
+      this._sendParticipationList();
     }
     else {
       //notify administrator to take action
@@ -287,6 +287,28 @@ There's currently ${this._getParticipantCount()} participants:
             `To help ${this._getResponsible().username} buying the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
 If you won't attend, please respond \`no\`.`));
+  }
+
+  _sendParticipationList() {
+    const attending = this._filterParticipants(AttendanceEnum.ATTENDING);
+    const notAttending = this._filterParticipants(AttendanceEnum.NOT_ATTENDING);
+    const unknown = this._filterParticipants(AttendanceEnum.UNKNOWN);
+
+    //TODO bring cake if less than half are participating
+
+    this.postMessageToUser(this._getResponsible().username,
+        `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow.
+
+Attending: ${attending.join(', ')}
+Not attending: ${notAttending.join(', ')}
+Unknown attendance: ${unknown.join(', ')}`
+    );
+  }
+
+  _filterParticipants(attendanceFilter) {
+    return this.participants
+        .filter((participant) => participant.attending === attendanceFilter)
+        .map((participant) => participant.username);
   }
 
   _reportError(error) {
