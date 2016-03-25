@@ -108,7 +108,7 @@ class RoundpiecesBot extends Bot {
       this._sendParticipationList();
     }
     else {
-      //notify administrator to take action
+      this._noResponsibleFoundInTime();
     }
   }
 
@@ -303,6 +303,13 @@ Attending: ${attending.join(', ')}
 Not attending: ${notAttending.join(', ')}
 Unknown attendance: ${unknown.join(', ')}`
     );
+  }
+
+  _noResponsibleFoundInTime() {
+    //TODO make sure admin is able to set list in correct order
+    this.postMessageToUser(this.settings.adminUserName,
+        `${this._getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
+Current list: ${this._getParticipantUserNames().join(', ')}`);
   }
 
   _filterParticipants(attendanceFilter) {
