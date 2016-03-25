@@ -7,15 +7,30 @@ const CronJob = require('cron').CronJob;
 const Participant = require('./participant').Participant;
 const AttendanceEnum = require('./participant').AttendanceEnum;
 
+const States = Object.freeze({
+  IDLE: 'idle',
+  ASKED_RESPONSBILE: 'asked responsible',
+  FOUND_RESPONSIBLE: 'found responsible'
+});
+
 class RoundpiecesBot extends Bot {
   constructor(settings) {
     super(settings);
     this.settings = settings;
+    this.state = States.IDLE;
   }
 
   run() {
     this.on('start', this._onStart);
     this.on('message', this._onMessage);
+  }
+
+  get state() {
+    return this._state;
+  }
+
+  set state(state) {
+    this._state = state;
   }
 
   get participants() {
@@ -148,6 +163,7 @@ class RoundpiecesBot extends Bot {
     if (participant.responsible) {
       this.postMessageToUser(participant.username, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
       participant.attending = AttendanceEnum.ATTENDING;
+      this.state = States.FOUND_RESPONSIBLE;
       this._updateList();
     }
     else {
@@ -228,6 +244,7 @@ class RoundpiecesBot extends Bot {
   _notifyParticipants() {
     this._notifyResponsible();
     this._queryForAttendance();
+    this.state = States.ASKED_RESPONSBILE;
     //TODO setup CronJob for sending participation list to responsible, changing the responsible, resetting attendance
   }
 
