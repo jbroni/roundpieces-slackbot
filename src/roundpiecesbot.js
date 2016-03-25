@@ -2,7 +2,6 @@
 
 const Bot = require('slackbots');
 const fs = require('fs');
-const _ = require('lodash');
 const CronJob = require('cron').CronJob;
 const Model = require('./model');
 const AttendanceEnum = require('./participant').AttendanceEnum;
