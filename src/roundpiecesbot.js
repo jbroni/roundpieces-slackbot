@@ -4,6 +4,7 @@ const Bot = require('slackbots');
 const fs = require('fs');
 const CronJob = require('cron').CronJob;
 const Model = require('./model');
+const MessageService = require('./messageservice');
 const AttendanceEnum = require('./participant').AttendanceEnum;
 
 const States = Object.freeze({
@@ -18,6 +19,7 @@ class RoundpiecesBot extends Bot {
     this.settings = settings;
     this.state = States.IDLE;
     this.model = new Model(this.settings.adminUserName);
+    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message), this.model);
   }
 
   run() {
@@ -53,8 +55,7 @@ class RoundpiecesBot extends Bot {
       this.model.setResponsible(this.model.participants[0]);
       this._setupCronJobs();
 
-      this.postMessageToUser(this.settings.adminUserName,
-          `${this.settings.name} fully activated! Type \`help\` for a full list of commands.`);
+      this.messageService.botActivated(this.settings.name);
     }
   }
 
@@ -73,10 +74,10 @@ class RoundpiecesBot extends Bot {
 
   _endResponsibleSearch() {
     if (this.state === States.FOUND_RESPONSIBLE) {
-      this._sendParticipationList();
+      this.messageService.participationList();
     }
     else {
-      this._noResponsibleFoundInTime();
+      this.messageService.noResponsibleResponse();
     }
   }
 
@@ -101,28 +102,28 @@ class RoundpiecesBot extends Bot {
               this._changeResponsible(messageParts[2]);
               break;
             default:
-              this._printUnknownCommand(participant.username);
+              this.messageService.unknownCommand(participant.username);
               break;
           }
         }
         else {
-          this.postMessageToUser(participant.username, 'You are not an administrator.');
+          this.messageService.notAdmin(participant.username);
         }
       }
       else {
         switch (message.text.toLowerCase()) {
           case 'help':
           case '?':
-            this._printHelp(participant.username);
+            this.messageService.help(participant.username);
             break;
           case 'status':
             this._printStatus(participant.username);
             break;
           case 'next':
-            this._printNext(participant.username);
+            this.messageService.next(participant.username);
             break;
           case 'list':
-            this._printList(participant.username);
+            this.messageService.list(participant.username);
             break;
           case 'accept':
             this._accept(participant);
@@ -137,48 +138,27 @@ class RoundpiecesBot extends Bot {
             this._notAttending(participant);
             break;
           default:
-            this._printUnknownCommand(participant.username);
+            this.messageService.unknownCommand(participant.username);
             break;
         }
       }
     }
   }
 
-  _printHelp(userName) {
-    this.postMessageToUser(userName, `Here is a list of commands:
-  • \`help\`, \`?\`: Prints this help
-  • \`status\`: Prints how long I've been alive
-  • \`next\`: Prints who is going to bring roundpieces next time
-  • \`list\`: Prints ordered list of people participating in the roundpieces arrangement`
-    );
-  }
-
   _printStatus(userName) {
     const uptime = Date.now() - this.startTime;
-    this.postMessageToUser(userName, `I have been alive for *${uptime} ms!*`);
-  }
-
-  _printNext(userName) {
-    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.model.getResponsible().username}*`);
-  }
-
-  _printList(userName) {
-    this.postMessageToUser(userName, this.model.getParticipantUserNames().join(', '));
-  }
-
-  _printUnknownCommand(userName) {
-    this.postMessageToUser(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
+    this.messageService.status(userName, uptime);
   }
 
   _accept(participant) {
     if (participant.responsible) {
-      this.postMessageToUser(participant.username, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
+      this.messageService.accepted(participant.username);
       participant.attending = AttendanceEnum.ATTENDING;
       this.state = States.FOUND_RESPONSIBLE;
       this._updateList();
     }
     else {
-      this.postMessageToUser(participant.username, 'You are not the responsible for bringing roundpieces next time.');
+      this.messageService.notResponsible(participant.username);
     }
   }
 
@@ -195,32 +175,32 @@ class RoundpiecesBot extends Bot {
   _reject(participant) {
     //TODO rejection after accept?
     if (participant.responsible) {
-      this.postMessageToUser(participant.username, 'Alright, I\'ll ask the next one on the list to bring them instead.');
+      this.messageService.rejected(participant.username);
       participant.attending = AttendanceEnum.NOT_ATTENDING;
       const nextUser = this.model.getNextParticipant(participant);
       if (!nextUser) {
         //TODO remember to disable cronjob
-        this.postMessageToUser(this.settings.adminUserName, 'Nobody is able to bring roundpieces for the next meeting.');
+        this.messageService.nobodyAttending();
         this.model.setResponsible(this.model.participants[0]);
       }
       else {
         this.model.setResponsible(nextUser);
-        this._notifyResponsible();
+        this.messageService.notifyResponsible();
       }
     }
     else {
-      this.postMessageToUser(participant.username, 'You are not the responsible for bringing roundpieces next time.');
+      this.messageService.notResponsible(participant.username);
     }
   }
 
   _attending(participant) {
     participant.attending = AttendanceEnum.ATTENDING;
-    this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you\'ll *be attending* tomorrow.');
+    this.messageService.attending(participant.username);
   }
 
   _notAttending(participant) {
     participant.attending = AttendanceEnum.NOT_ATTENDING;
-    this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
+    this.messageService.notAttending(participant.username);
   }
 
   _changeResponsible(newResposibleUserName) {
@@ -229,63 +209,23 @@ class RoundpiecesBot extends Bot {
       this.model.setResponsible(responsible);
       this.state = States.FOUND_RESPONSIBLE;
       this._updateList();
-      this._sendParticipationList();
-      this.postMessageToUser(this.settings.adminUserName, `${responsible.username} has been set as responsible and list has been updated.`);
+      this.messageService.participationList();
+      this.messageService.responsibleChanged(responsible.username);
     }
     else {
-      this.postMessageToUser(this.settings.adminUserName, `${newResposibleUserName} is not a participant.`);
+      this.messageService.notParticipant(newResposibleUserName);
     }
   }
 
   _notifyParticipants() {
-    this._notifyResponsible();
-    this._queryForAttendance();
-  }
-
-  _notifyResponsible() {
-    this.postMessageToUser(this.model.getResponsible().username,
-        `It is your turn to bring roundpieces next time!
-Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
-There's currently ${this.model.getParticipantCount()} participants:
-  ${this.model.getParticipantUserNames().join(', ')}`);
-  }
-
-  _queryForAttendance() {
     //TODO handle non-slack users
-    this.model.participants
-        .filter((participant) => !participant.responsible)
-        .forEach((participant) => this.postMessageToUser(participant.username,
-            `To help the responsible buying the correct number of roundpieces, please respond to this message before 12.00 today.
-Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
-If you won't attend, please respond \`no\`.`));
-  }
-
-  _sendParticipationList() {
-    const attending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.ATTENDING);
-    const notAttending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.NOT_ATTENDING);
-    const unknown = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.UNKNOWN);
-
-    //TODO bring cake if less than half are participating
-
-    this.postMessageToUser(this.model.getResponsible().username,
-        `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow.
-
-Attending: ${attending.join(', ')}
-Not attending: ${notAttending.join(', ')}
-Unknown attendance: ${unknown.join(', ')}`
-    );
-  }
-
-  _noResponsibleFoundInTime() {
-    //TODO make sure admin is able to set list in correct order
-    this.postMessageToUser(this.settings.adminUserName,
-        `${this.model.getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
-Current list: ${this.model.getParticipantUserNames().join(', ')}`);
+    this.messageService.notifyResponsible();
+    this.messageService.queryForAttendance();
   }
 
   _reportError(error) {
     console.error(error);
-    this.postMessageToUser(this.settings.adminUserName, `I'm afraid I've encountered an error: ${error}`);
+    this.messageService.error(error);
   }
 }
 
