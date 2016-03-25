@@ -6,7 +6,7 @@ const _ = require('lodash');
 const CronJob = require('cron').CronJob;
 const Participant = require('./participant');
 
-const RoundpiecesBot = class RoundpiecesBot extends Bot {
+class RoundpiecesBot extends Bot {
   constructor(settings) {
     super(settings);
     this.settings = settings;
@@ -252,6 +252,6 @@ If you won't attend, please respond \`no\`.`));
     console.error(error);
     this.postMessageToUser(this.settings.adminUserName, `I'm afraid I've encountered an error: ${error}`);
   }
-};
+}
 
 module.exports = RoundpiecesBot;

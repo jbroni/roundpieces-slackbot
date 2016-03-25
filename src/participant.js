@@ -1,6 +1,6 @@
 'use strict';
 
-const Participant = class Participant {
+class Participant {
   constructor(id, username) {
     this.id = id;
     this.username = username;
@@ -40,6 +40,6 @@ const Participant = class Participant {
     this._attending = attending;
   }
 
-};
+}
 
 module.exports = Participant;
