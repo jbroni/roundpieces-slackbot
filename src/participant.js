@@ -7,9 +7,10 @@ const AttendanceEnum = Object.freeze({
 });
 
 class Participant {
-  constructor(id, username) {
+  constructor(id, username, admin) {
     this.id = id;
     this.username = username;
+    this.admin = admin;
     this.responsible = false;
     this.attending = AttendanceEnum.UNKNOWN;
   }
@@ -28,6 +29,14 @@ class Participant {
 
   set username(username) {
     this._username = username;
+  }
+
+  get admin() {
+    return this._admin;
+  }
+
+  set admin(admin) {
+    this._admin = admin;
   }
 
   get responsible() {

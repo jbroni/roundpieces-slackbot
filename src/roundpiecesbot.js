@@ -43,7 +43,7 @@ class RoundpiecesBot extends Bot {
         .filter((userName) => this._userExists(userName))
         .map((userName) => {
           const userId = this._getUserIdFromUserName(userName);
-          return new Participant(userId, userName);
+          return new Participant(userId, userName, userName === this.settings.adminUserName);
         });
   }
 
@@ -127,7 +127,7 @@ class RoundpiecesBot extends Bot {
       }
 
       if (message.text.startsWith('admin')) {
-        if (this._isAdmin(participant)) {
+        if (participant.admin) {
           const messageParts = message.text.split(' ');
           switch (messageParts[1]) {
             case 'setResponsible':
@@ -139,7 +139,7 @@ class RoundpiecesBot extends Bot {
           }
         }
         else {
-          this.postMessageToUser(participant.username, 'You are not the administrator.');
+          this.postMessageToUser(participant.username, 'You are not an administrator.');
         }
       }
       else {
@@ -271,11 +271,6 @@ class RoundpiecesBot extends Bot {
     else {
       this.postMessageToUser(this.settings.adminUserName, `${newResposibleUserName} is not a participant.`);
     }
-  }
-
-  _isAdmin(participant) {
-    //TODO move to participant class
-    return participant.username === this.settings.adminUserName;
   }
 
   _getUserNameFromUserId(userId) {
