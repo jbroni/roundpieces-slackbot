@@ -125,35 +125,54 @@ class RoundpiecesBot extends Bot {
         console.log(message);
         return;
       }
-      switch (message.text.toLowerCase()) {
-        case 'help':
-        case '?':
-          this._printHelp(participant.username);
-          break;
-        case 'status':
-          this._printStatus(participant.username);
-          break;
-        case 'next':
-          this._printNext(participant.username);
-          break;
-        case 'list':
-          this._printList(participant.username);
-          break;
-        case 'accept':
-          this._accept(participant);
-          break;
-        case 'reject':
-          this._reject(participant);
-          break;
-        case 'yes':
-          this._attending(participant);
-          break;
-        case 'no':
-          this._notAttending(participant);
-          break;
-        default:
-          this._printUnknownCommand(participant.username);
-          break;
+
+      if (message.text.startsWith('admin')) {
+        if (this._isAdmin(participant)) {
+          const messageParts = message.text.split(' ');
+          switch (messageParts[1]) {
+            case 'setResponsible':
+              this._changeResponsible(messageParts[2]);
+              break;
+            default:
+              this._printUnknownCommand(participant.username);
+              break;
+          }
+        }
+        else {
+          this.postMessageToUser(participant.username, 'You are not the administrator.');
+        }
+      }
+      else {
+        switch (message.text.toLowerCase()) {
+          case 'help':
+          case '?':
+            this._printHelp(participant.username);
+            break;
+          case 'status':
+            this._printStatus(participant.username);
+            break;
+          case 'next':
+            this._printNext(participant.username);
+            break;
+          case 'list':
+            this._printList(participant.username);
+            break;
+          case 'accept':
+            this._accept(participant);
+            break;
+          case 'reject':
+            this._reject(participant);
+            break;
+          case 'yes':
+            this._attending(participant);
+            break;
+          case 'no':
+            this._notAttending(participant);
+            break;
+          default:
+            this._printUnknownCommand(participant.username);
+            break;
+        }
       }
     }
   }
@@ -240,6 +259,25 @@ class RoundpiecesBot extends Bot {
     this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
   }
 
+  _changeResponsible(newResposibleUserName) {
+    const responsible = this._getParticipantFromUserName(newResposibleUserName);
+    if (responsible) {
+      this._setResponsible(responsible);
+      this.state = States.FOUND_RESPONSIBLE;
+      this._updateList();
+      this._sendParticipationList();
+      this.postMessageToUser(this.settings.adminUserName, `${responsible.username} has been set as responsible and list has been updated.`);
+    }
+    else {
+      this.postMessageToUser(this.settings.adminUserName, `${newResposibleUserName} is not a participant.`);
+    }
+  }
+
+  _isAdmin(participant) {
+    //TODO move to participant class
+    return participant.username === this.settings.adminUserName;
+  }
+
   _getUserNameFromUserId(userId) {
     const user = _.find(this.users, (user) => user.id === userId);
     return user ? user.name : null;
@@ -256,6 +294,10 @@ class RoundpiecesBot extends Bot {
 
   _getParticipantFromId(userId) {
     return _.find(this.participants, (participant) => participant.id === userId);
+  }
+
+  _getParticipantFromUserName(userName) {
+    return _.find(this.participants, (participant) => participant.username === userName);
   }
 
   _getNextParticipant(currentParticipant) {
