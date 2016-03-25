@@ -10,7 +10,8 @@ const AttendanceEnum = require('./participant').AttendanceEnum;
 const States = Object.freeze({
   IDLE: 'idle',
   ASKED_RESPONSBILE: 'asked responsible',
-  FOUND_RESPONSIBLE: 'found responsible'
+  FOUND_RESPONSIBLE: 'found responsible',
+  NO_RESPONSIBLE: 'no responsible'
 });
 
 class RoundpiecesBot extends Bot {
@@ -73,11 +74,16 @@ class RoundpiecesBot extends Bot {
   }
 
   _endResponsibleSearch() {
-    if (this.state === States.FOUND_RESPONSIBLE) {
-      this.messageService.participationList();
-    }
-    else {
-      this.messageService.noResponsibleResponse();
+    switch (this.state) {
+      case States.FOUND_RESPONSIBLE:
+        this.messageService.participationList();
+        break;
+      case States.ASKED_RESPONSBILE:
+        this.messageService.noResponsibleResponse();
+        break;
+      case States.NO_RESPONSIBLE:
+        //No attendance - don't do anything
+        break;
     }
   }
 
@@ -177,9 +183,10 @@ class RoundpiecesBot extends Bot {
     if (participant.responsible) {
       this.messageService.rejected(participant.username);
       participant.attending = AttendanceEnum.NOT_ATTENDING;
+      //TODO don't ask someone that has already indicated non-attendance
       const nextUser = this.model.getNextParticipant(participant);
       if (!nextUser) {
-        //TODO remember to disable cronjob
+        this.state = States.NO_RESPONSIBLE;
         this.messageService.nobodyAttending();
         this.model.setResponsible(this.model.participants[0]);
       }
@@ -194,11 +201,13 @@ class RoundpiecesBot extends Bot {
   }
 
   _attending(participant) {
+    //TODO correct state?
     participant.attending = AttendanceEnum.ATTENDING;
     this.messageService.attending(participant.username);
   }
 
   _notAttending(participant) {
+    //TODO correct state?
     participant.attending = AttendanceEnum.NOT_ATTENDING;
     this.messageService.notAttending(participant.username);
   }
