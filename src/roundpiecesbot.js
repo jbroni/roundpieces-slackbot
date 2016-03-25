@@ -183,7 +183,6 @@ class RoundpiecesBot extends Bot {
     if (participant.responsible) {
       this.messageService.rejected(participant.username);
       participant.attending = AttendanceEnum.NOT_ATTENDING;
-      //TODO don't ask someone that has already indicated non-attendance
       const nextUser = this.model.getNextParticipant(participant);
       if (!nextUser) {
         this.state = States.NO_RESPONSIBLE;

@@ -128,7 +128,12 @@ describe('Model', () => {
       expect(model.getNextParticipant(participants[0])).to.deep.equal(participants[1]);
     });
 
-    it('should find the next participant', () => {
+    it('should skip participants that won\'t be attending', () => {
+      model.participants[1].attending = AttendanceEnum.NOT_ATTENDING;
+      expect(model.getNextParticipant(participants[0])).to.deep.equal(participants[2]);
+    });
+
+    it('should return null if it\'s the last participant', () => {
       expect(model.getNextParticipant(participants[3])).to.equal(null);
     });
 

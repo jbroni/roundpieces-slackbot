@@ -62,7 +62,11 @@ class Model {
     if (currentIndex >= this.getParticipantCount() - 1) {
       return null;
     }
-    return this.participants[currentIndex + 1];
+    const participant = this.participants[currentIndex + 1];
+    if (participant.attending === AttendanceEnum.NOT_ATTENDING) {
+      return this.getNextParticipant(participant);
+    }
+    return participant;
   }
 
   getResponsible() {
