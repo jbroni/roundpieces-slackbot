@@ -4,7 +4,7 @@ const Bot = require('slackbots');
 const fs = require('fs');
 const _ = require('lodash');
 const CronJob = require('cron').CronJob;
-const Participant = require('./participant').Participant;
+const Model = require('./model');
 const AttendanceEnum = require('./participant').AttendanceEnum;
 
 const States = Object.freeze({
@@ -18,6 +18,7 @@ class RoundpiecesBot extends Bot {
     super(settings);
     this.settings = settings;
     this.state = States.IDLE;
+    this.model = new Model(this.settings.adminUserName);
   }
 
   run() {
@@ -33,39 +34,6 @@ class RoundpiecesBot extends Bot {
     this._state = state;
   }
 
-  get participants() {
-    return this._participants;
-  }
-
-  set participants(list) {
-    this._participants = list
-        .split('\n')
-        .filter((userName) => this._userExists(userName))
-        .map((userName) => {
-          const userId = this._getUserIdFromUserName(userName);
-          return new Participant(userId, userName, userName === this.settings.adminUserName);
-        });
-  }
-
-  _getParticipantCount() {
-    return this.participants.length;
-  }
-
-  _getParticipantUserNames() {
-    return this.participants.map((participant) => participant.username);
-  }
-
-  _getResponsible() {
-    return _.find(this.participants, (participant) => participant.responsible);
-  }
-
-  _setResponsible(responsible) {
-    _.forEach(this.participants, (participant) => {
-      participant.responsible = false;
-    });
-    _.find(this.participants, responsible).responsible = true;
-  }
-
   _onStart() {
     this.startTime = Date.now();
 
@@ -77,12 +45,13 @@ class RoundpiecesBot extends Bot {
       this._reportError(error);
     }
     else {
-      this.participants = data;
-      if (this._getParticipantCount() < 1) {
+      this.model.users = this.users;
+      this.model.participants = data;
+      if (this.model.getParticipantCount() < 1) {
         this._reportError('No participants in list');
         return;
       }
-      this._setResponsible(this.participants[0]);
+      this.model.setResponsible(this.model.participants[0]);
       this._setupCronJobs();
 
       this.postMessageToUser(this.settings.adminUserName,
@@ -113,13 +82,12 @@ class RoundpiecesBot extends Bot {
   }
 
   _reset() {
-    this.participants.forEach((participant) => participant.attending = AttendanceEnum.UNKNOWN);
-    this._setResponsible(this.participants[0]);
+    this.model.reset();
   }
 
   _onMessage(message) {
     if (message.type === 'message' && message.user) {
-      const participant = this._getParticipantFromId(message.user);
+      const participant = this.model.getParticipantFromId(message.user);
       if (!participant) {
         this._reportError(`Unknown user id: ${message.user}`);
         console.log(message);
@@ -192,11 +160,11 @@ class RoundpiecesBot extends Bot {
   }
 
   _printNext(userName) {
-    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this._getResponsible().username}*`);
+    this.postMessageToUser(userName, `The next person to bring roundpieces is *${this.model.getResponsible().username}*`);
   }
 
   _printList(userName) {
-    this.postMessageToUser(userName, this._getParticipantUserNames().join(', '));
+    this.postMessageToUser(userName, this.model.getParticipantUserNames().join(', '));
   }
 
   _printUnknownCommand(userName) {
@@ -216,12 +184,9 @@ class RoundpiecesBot extends Bot {
   }
 
   _updateList() {
-    //Move responsible to end of list
-    const responsible = this._getResponsible();
-    _.pull(this.participants, responsible);
-    this.participants.push(responsible);
+    this.model.updateList();
     //Persist list
-    fs.writeFile(this.settings.listPath, this._getParticipantUserNames().join('\n'), (error) => {
+    fs.writeFile(this.settings.listPath, this.model.getParticipantUserNames().join('\n'), (error) => {
       if (error) {
         this._reportError(`Failed to save list due to ${error}`);
       }
@@ -233,14 +198,14 @@ class RoundpiecesBot extends Bot {
     if (participant.responsible) {
       this.postMessageToUser(participant.username, 'Alright, I\'ll ask the next one on the list to bring them instead.');
       participant.attending = AttendanceEnum.NOT_ATTENDING;
-      const nextUser = this._getNextParticipant(participant);
+      const nextUser = this.model.getNextParticipant(participant);
       if (!nextUser) {
         //TODO remember to disable cronjob
         this.postMessageToUser(this.settings.adminUserName, 'Nobody is able to bring roundpieces for the next meeting.');
-        this._setResponsible(this.participants[0]);
+        this.model.setResponsible(this.model.participants[0]);
       }
       else {
-        this._setResponsible(nextUser);
+        this.model.setResponsible(nextUser);
         this._notifyResponsible();
       }
     }
@@ -260,9 +225,9 @@ class RoundpiecesBot extends Bot {
   }
 
   _changeResponsible(newResposibleUserName) {
-    const responsible = this._getParticipantFromUserName(newResposibleUserName);
+    const responsible = this.model.getParticipantFromUserName(newResposibleUserName);
     if (responsible) {
-      this._setResponsible(responsible);
+      this.model.setResponsible(responsible);
       this.state = States.FOUND_RESPONSIBLE;
       this._updateList();
       this._sendParticipationList();
@@ -273,67 +238,37 @@ class RoundpiecesBot extends Bot {
     }
   }
 
-  _getUserNameFromUserId(userId) {
-    const user = _.find(this.users, (user) => user.id === userId);
-    return user ? user.name : null;
-  }
-
-  _getUserIdFromUserName(userName) {
-    const user = _.find(this.users, (user) => user.name === userName);
-    return user ? user.id : null;
-  }
-
-  _userExists(userName) {
-    return Boolean(this._getUserIdFromUserName(userName));
-  }
-
-  _getParticipantFromId(userId) {
-    return _.find(this.participants, (participant) => participant.id === userId);
-  }
-
-  _getParticipantFromUserName(userName) {
-    return _.find(this.participants, (participant) => participant.username === userName);
-  }
-
-  _getNextParticipant(currentParticipant) {
-    const currentIndex = _.findIndex(this.participants, currentParticipant);
-    if (currentIndex >= this._getParticipantCount() - 1) {
-      return null;
-    }
-    return this.participants[currentIndex + 1];
-  }
-
   _notifyParticipants() {
     this._notifyResponsible();
     this._queryForAttendance();
   }
 
   _notifyResponsible() {
-    this.postMessageToUser(this._getResponsible().username,
+    this.postMessageToUser(this.model.getResponsible().username,
         `It is your turn to bring roundpieces next time!
 Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
-There's currently ${this._getParticipantCount()} participants:
-  ${this._getParticipantUserNames().join(', ')}`);
+There's currently ${this.model.getParticipantCount()} participants:
+  ${this.model.getParticipantUserNames().join(', ')}`);
   }
 
   _queryForAttendance() {
     //TODO handle non-slack users
-    this.participants
+    this.model.participants
         .filter((participant) => !participant.responsible)
         .forEach((participant) => this.postMessageToUser(participant.username,
-            `To help ${this._getResponsible().username} buying the correct number of roundpieces, please respond to this message before 12.00 today.
+            `To help the responsible buying the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
 If you won't attend, please respond \`no\`.`));
   }
 
   _sendParticipationList() {
-    const attending = this._filterParticipants(AttendanceEnum.ATTENDING);
-    const notAttending = this._filterParticipants(AttendanceEnum.NOT_ATTENDING);
-    const unknown = this._filterParticipants(AttendanceEnum.UNKNOWN);
+    const attending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.ATTENDING);
+    const notAttending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.NOT_ATTENDING);
+    const unknown = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.UNKNOWN);
 
     //TODO bring cake if less than half are participating
 
-    this.postMessageToUser(this._getResponsible().username,
+    this.postMessageToUser(this.model.getResponsible().username,
         `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow.
 
 Attending: ${attending.join(', ')}
@@ -345,14 +280,8 @@ Unknown attendance: ${unknown.join(', ')}`
   _noResponsibleFoundInTime() {
     //TODO make sure admin is able to set list in correct order
     this.postMessageToUser(this.settings.adminUserName,
-        `${this._getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
-Current list: ${this._getParticipantUserNames().join(', ')}`);
-  }
-
-  _filterParticipants(attendanceFilter) {
-    return this.participants
-        .filter((participant) => participant.attending === attendanceFilter)
-        .map((participant) => participant.username);
+        `${this.model.getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
+Current list: ${this.model.getParticipantUserNames().join(', ')}`);
   }
 
   _reportError(error) {
