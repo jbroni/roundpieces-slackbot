@@ -85,10 +85,13 @@ There's currently ${this.model.getParticipantCount()} participants:
     const notAttending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.NOT_ATTENDING);
     const unknown = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.UNKNOWN);
 
-    //TODO bring cake if less than half are participating
+    let bringCake = '';
+    if (attending.length + unknown.length < this.model.getParticipantCount() / 2) {
+      bringCake = 'Less than half of the participant will be attending tomorrow. That means you will also have to *bring cake*.';
+    }
 
     this.sendMessage(this.model.getResponsible().username,
-        `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow.
+        `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow. ${bringCake}
 
 Attending: ${attending.join(', ')}
 Not attending: ${notAttending.join(', ')}
