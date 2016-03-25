@@ -113,8 +113,8 @@ class RoundpiecesBot extends Bot {
   }
 
   _reset() {
-    //reset attendance
-    //reset responsible
+    this.participants.forEach((participant) => participant.attending = AttendanceEnum.UNKNOWN);
+    this._setResponsible(this.participants[0]);
   }
 
   _onMessage(message) {
