@@ -1,11 +1,17 @@
 'use strict';
 
+const AttendanceEnum = Object.freeze({
+  UNKNOWN: 'unknown',
+  ATTENDING: 'attending',
+  NOT_ATTENDING: 'not attending'
+});
+
 class Participant {
   constructor(id, username) {
     this.id = id;
     this.username = username;
     this.responsible = false;
-    this.attending = 'unknown';
+    this.attending = AttendanceEnum.UNKNOWN;
   }
 
   get id() {
@@ -42,4 +48,7 @@ class Participant {
 
 }
 
-module.exports = Participant;
+module.exports = {
+  Participant: Participant,
+  AttendanceEnum: AttendanceEnum
+};

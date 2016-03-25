@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const RoundpiecesBot = require('../src/roundpiecesbot');
-const Participant = require('../src/participant');
+const Participant = require('../src/participant').Participant;
 const fs = require('fs');
 
 describe('Roundpieces Bot', () => {

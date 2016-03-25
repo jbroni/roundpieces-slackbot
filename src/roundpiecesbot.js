@@ -4,7 +4,8 @@ const Bot = require('slackbots');
 const fs = require('fs');
 const _ = require('lodash');
 const CronJob = require('cron').CronJob;
-const Participant = require('./participant');
+const Participant = require('./participant').Participant;
+const AttendanceEnum = require('./participant').AttendanceEnum;
 
 class RoundpiecesBot extends Bot {
   constructor(settings) {
@@ -146,7 +147,7 @@ class RoundpiecesBot extends Bot {
   _accept(participant) {
     if (participant.responsible) {
       this.postMessageToUser(participant.username, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
-      participant.attending = 'yes';
+      participant.attending = AttendanceEnum.ATTENDING;
       this._updateList();
     }
     else {
@@ -171,7 +172,7 @@ class RoundpiecesBot extends Bot {
     //TODO rejection after accept?
     if (participant.responsible) {
       this.postMessageToUser(participant.username, 'Alright, I\'ll ask the next one on the list to bring them instead.');
-      participant.attending = 'no';
+      participant.attending = AttendanceEnum.NOT_ATTENDING;
       const nextUser = this._getNextParticipant(participant);
       if (!nextUser) {
         //TODO remember to disable cronjob
@@ -189,12 +190,12 @@ class RoundpiecesBot extends Bot {
   }
 
   _attending(participant) {
-    participant.attending = 'yes';
+    participant.attending = AttendanceEnum.ATTENDING;
     this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you\'ll *be attending* tomorrow.');
   }
 
   _notAttending(participant) {
-    participant.attending = 'no';
+    participant.attending = AttendanceEnum.NOT_ATTENDING;
     this.postMessageToUser(participant.username, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
   }
 
