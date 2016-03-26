@@ -57,6 +57,10 @@ class MessageService {
     this._messageAdmin('Nobody is able to bring roundpieces for the next meeting.');
   }
 
+  noLongerResponsible() {
+    this._messageResponsible('You are no longer responsible for bringing roundpieces tomorrow.');
+  }
+
   noResponsibleResponse() {
     this._messageAdmin(`${this.model.getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
 Current list: ${this.model.getParticipantUserNames().join(', ')}`);

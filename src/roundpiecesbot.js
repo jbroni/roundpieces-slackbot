@@ -249,6 +249,7 @@ class RoundpiecesBot extends Bot {
   _changeResponsible(newResposibleUserName) {
     const responsible = this.model.getParticipantFromUserName(newResposibleUserName);
     if (responsible) {
+      this.messageService.noLongerResponsible();
       this.model.setResponsible(responsible);
       this._updateList();
       this.messageService.participationList();
