@@ -20,6 +20,13 @@ class MessageService {
     this.sendMessage(userName, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
   }
 
+  adminHelp() {
+    this._messageAdmin(`Invoke admin commands by typing \`admin\` followed by one of the following commands:
+    • \`help\`: Prints this help
+    • \`setResponsible username\`: Sets user with \`username\` as the new responsible
+    `);
+  }
+
   attending(userName) {
     this.sendMessage(userName, 'Thank you for your response. I have noted that you\'ll *be attending* tomorrow.');
   }
@@ -33,12 +40,17 @@ class MessageService {
   }
 
   help(userName) {
-    //TODO yes, no, accept, reject, admin
     this.sendMessage(userName, `Here is a list of commands:
   • \`help\`, \`?\`: Prints this help
+  • \`admin help\`: Prints available admin commands
   • \`status\`: Prints how long I've been alive
   • \`next\`: Prints who is going to bring roundpieces next time
-  • \`list\`: Prints ordered list of people participating in the roundpieces arrangement`);
+  • \`list\`: Prints ordered list of people participating in the roundpieces arrangement
+  • \`yes\`: Indicate that you will be attending the next meeting
+  • \`no\`: Indicate that you will not be attending the next meeting
+  • \`accept\`: Indicate that you will be bringing roundpieces for the next meeting
+  • \`reject\`: Indicate that you are unable to bring roundpieces for the next meeting
+  `);
   }
 
   isResponsible() {

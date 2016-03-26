@@ -107,6 +107,9 @@ class RoundpiecesBot extends Bot {
         if (participant.admin) {
           const messageParts = message.text.split(' ');
           switch (messageParts[1]) {
+            case 'help':
+              this.messageService.adminHelp();
+              break;
             case 'setResponsible':
               this._changeResponsible(messageParts[2]);
               break;
