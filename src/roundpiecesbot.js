@@ -12,7 +12,8 @@ const States = Object.freeze({
   ASKED_RESPONSBILE: 'asked responsible',
   FOUND_RESPONSIBLE: 'found responsible',
   NO_RESPONSIBLE: 'no responsible',
-  AWAITING_MEETING: 'awaiting meeting'
+  AWAITING_MEETING: 'awaiting meeting',
+  SKIPPED: 'skipped'
 });
 
 class RoundpiecesBot extends Bot {
@@ -70,8 +71,10 @@ class RoundpiecesBot extends Bot {
   }
 
   _startResponsibleSearch() {
-    this.state = States.ASKED_RESPONSBILE;
-    this._notifyParticipants();
+    if (this.state !== States.SKIPPED) {
+      this.state = States.ASKED_RESPONSBILE;
+      this._notifyParticipants();
+    }
   }
 
   _endResponsibleSearch() {
@@ -83,6 +86,7 @@ class RoundpiecesBot extends Bot {
         this.messageService.noResponsibleResponse();
         break;
       case States.NO_RESPONSIBLE:
+      case States.SKIPPED:
         //No attendance - don't do anything
         break;
     }
@@ -112,6 +116,9 @@ class RoundpiecesBot extends Bot {
               break;
             case 'setResponsible':
               this._changeResponsible(messageParts[2]);
+              break;
+            case 'skip':
+              this._skipNextMeeting();
               break;
             default:
               this.messageService.unknownCommand(participant.username);
@@ -261,6 +268,11 @@ class RoundpiecesBot extends Bot {
     else {
       this.messageService.notParticipant(newResposibleUserName);
     }
+  }
+
+  _skipNextMeeting() {
+    this.state = States.SKIPPED;
+    this.messageService.skipping();
   }
 
   _notifyParticipants() {

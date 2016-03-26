@@ -24,6 +24,7 @@ class MessageService {
     this._messageAdmin(`Invoke admin commands by typing \`admin\` followed by one of the following commands:
     • \`help\`: Prints this help
     • \`setResponsible username\`: Sets user with \`username\` as the new responsible
+    • \`skip\`: Skips next meeting
     `);
   }
 
@@ -141,6 +142,10 @@ If you won't attend, please respond \`no\`.`));
   responsibleChanged(responsible) {
     const responsibleLink = this.model.getParticipantFromUserName(responsible).link;
     this._messageAdmin(`${responsibleLink} has been set as responsible and list has been updated.`);
+  }
+
+  skipping() {
+    this._messageAdmin('Next meeting will be skipped.');
   }
 
   status(userName, uptime) {
