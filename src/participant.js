@@ -56,7 +56,16 @@ class Participant {
   }
 
   get link() {
-    return `<@${this.id}|${this.username}>`;
+    if (this.isSlackUser()) {
+      return `<@${this.id}|${this.username}>`;
+    }
+    else {
+      return this.username;
+    }
+  }
+
+  isSlackUser() {
+    return !!this.id;
   }
 
 }

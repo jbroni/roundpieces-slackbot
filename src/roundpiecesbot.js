@@ -264,7 +264,6 @@ class RoundpiecesBot extends Bot {
   }
 
   _notifyParticipants() {
-    //TODO handle non-slack users
     this.messageService.notifyResponsible();
     this.messageService.queryForAttendance();
   }

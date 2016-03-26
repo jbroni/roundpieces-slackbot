@@ -32,7 +32,7 @@ class Model {
   set participants(list) {
     this._participants = list
         .split('\n')
-        .filter((userName) => this._userExists(userName))
+        .filter((userName) => userName !== '')
         .map((userName) => {
           const userId = this._getUserIdFromUserName(userName);
           return new Participant(userId, userName, userName === this.admin);
@@ -103,10 +103,6 @@ class Model {
   _getUserIdFromUserName(userName) {
     const user = _.find(this.users, (user) => user.name === userName);
     return user ? user.id : null;
-  }
-
-  _userExists(userName) {
-    return Boolean(this._getUserIdFromUserName(userName));
   }
 }
 

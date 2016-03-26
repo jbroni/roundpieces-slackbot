@@ -52,11 +52,6 @@ describe('Model', () => {
       expect(model.participants.length).to.equal(4);
     });
 
-    it('should filter out non-slack users', () => {
-      model.participants = 'a\nb\nc\nf';
-      expect(model.participants.length).to.equal(3);
-    });
-
     it('should create a participant array with the correct users', () => {
       model.participants = list;
       expect(model.participants).to.deep.equal(participants);

@@ -87,10 +87,15 @@ Current list: ${this.model.getParticipantLinks().join(', ')}`);
   }
 
   notifyResponsible() {
-    this._messageResponsible(`It is your turn to bring roundpieces next time!
+    if (this.model.getResponsible().isSlackUser()) {
+      this._messageResponsible(`It is your turn to bring roundpieces next time!
 Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
 There's currently ${this.model.getParticipantCount()} participants:
   ${this.model.getParticipantLinks().join(', ')}`);
+    }
+    else {
+      this._messageAdmin(`It is non-slack user *${this.model.getResponsible().link}*'s turn to bring roundpieces next time. Please notify the participant manually.`);
+    }
   }
 
   notParticipant(participant) {
@@ -122,7 +127,7 @@ Unknown attendance: ${unknown.join(', ')}`
 
   queryForAttendance() {
     this.model.participants
-        .filter((participant) => !participant.responsible)
+        .filter((participant) => !participant.responsible && participant.isSlackUser())
         .forEach((participant) => this.sendMessage(participant.username,
             `To help the responsible buying the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
@@ -151,7 +156,7 @@ If you won't attend, please respond \`no\`.`));
   }
 
   _messageAdmin(message) {
-    this.sendMessage(this.model.admin, message);
+    this.sendMessage(this.model.admin, `*ADMIN MESSAGE:* ${message}`);
   }
 
   _messageResponsible(message) {
