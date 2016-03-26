@@ -21,6 +21,10 @@ class Model {
     return this._admin;
   }
 
+  get adminUser() {
+    return this.participants.find((participant) => participant.admin);
+  }
+
   get participants() {
     return this._participants;
   }
@@ -43,10 +47,14 @@ class Model {
     return this.participants.map((participant) => participant.username);
   }
 
-  getParticipantUserNamesByAttendance(attendance) {
+  getParticipantLinks() {
+    return this.participants.map((participant) => participant.link);
+  }
+
+  getParticipantLinksByAttendance(attendance) {
     return this.participants
         .filter((participant) => participant.attending === attendance)
-        .map((participant) => participant.username);
+        .map((participant) => participant.link);
   }
 
   getParticipantFromId(userId) {

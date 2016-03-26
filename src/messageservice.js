@@ -58,11 +58,11 @@ class MessageService {
   }
 
   list(userName) {
-    this.sendMessage(userName, this.model.getParticipantUserNames().join(', '));
+    this.sendMessage(userName, this.model.getParticipantLinks().join(', '));
   }
 
   next(userName) {
-    this.sendMessage(userName, `The next person to bring roundpieces is *${this.model.getResponsible().username}*`);
+    this.sendMessage(userName, `The next person to bring roundpieces is *${this.model.getResponsible().link}*`);
   }
 
   nobodyAttending() {
@@ -74,8 +74,8 @@ class MessageService {
   }
 
   noResponsibleResponse() {
-    this._messageAdmin(`${this.model.getResponsible().username} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
-Current list: ${this.model.getParticipantUserNames().join(', ')}`);
+    this._messageAdmin(`${this.model.getResponsible().link} did not respond. Please make sure that someone is able to bring roundpieces tomorrow.
+Current list: ${this.model.getParticipantLinks().join(', ')}`);
   }
 
   notAdmin(userName) {
@@ -90,7 +90,7 @@ Current list: ${this.model.getParticipantUserNames().join(', ')}`);
     this._messageResponsible(`It is your turn to bring roundpieces next time!
 Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
 There's currently ${this.model.getParticipantCount()} participants:
-  ${this.model.getParticipantUserNames().join(', ')}`);
+  ${this.model.getParticipantLinks().join(', ')}`);
   }
 
   notParticipant(participant) {
@@ -102,9 +102,9 @@ There's currently ${this.model.getParticipantCount()} participants:
   }
 
   participationList() {
-    const attending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.ATTENDING);
-    const notAttending = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.NOT_ATTENDING);
-    const unknown = this.model.getParticipantUserNamesByAttendance(AttendanceEnum.UNKNOWN);
+    const attending = this.model.getParticipantLinksByAttendance(AttendanceEnum.ATTENDING);
+    const notAttending = this.model.getParticipantLinksByAttendance(AttendanceEnum.NOT_ATTENDING);
+    const unknown = this.model.getParticipantLinksByAttendance(AttendanceEnum.UNKNOWN);
 
     let bringCake = '';
     if (attending.length + unknown.length < this.model.getParticipantCount() / 2) {
@@ -134,7 +134,8 @@ If you won't attend, please respond \`no\`.`));
   }
 
   responsibleChanged(responsible) {
-    this._messageAdmin(`${responsible} has been set as responsible and list has been updated.`);
+    const responsibleLink = this.model.getParticipantFromUserName(responsible).link;
+    this._messageAdmin(`${responsibleLink} has been set as responsible and list has been updated.`);
   }
 
   status(userName, uptime) {
@@ -146,7 +147,7 @@ If you won't attend, please respond \`no\`.`));
   }
 
   wrongTime(userName) {
-    this.sendMessage(userName, `You cannot do that now. Contact ${this.model.admin} if you think you should be able to.`);
+    this.sendMessage(userName, `You cannot do that now. Contact ${this.model.adminUser.link} if you think you should be able to.`);
   }
 
   _messageAdmin(message) {

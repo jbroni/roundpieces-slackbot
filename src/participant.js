@@ -55,6 +55,10 @@ class Participant {
     this._attending = attending;
   }
 
+  get link() {
+    return `<@${this.id}|${this.username}>`;
+  }
+
 }
 
 module.exports = {
