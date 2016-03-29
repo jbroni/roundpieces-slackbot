@@ -4,9 +4,9 @@ const token = process.env.ROUNDPIECES_API_KEY;
 const adminUserName = process.env.ROUNDPIECES_ADMIN_USERNAME;
 const listPath = process.env.ROUNDPIECES_LIST_PATH;
 
-const startSearch = '00 * * * * *';
-const endSearch = '30 * * * * *';
-const resetSearch = '55 * * * * *';
+const startSearch = '00 00 9 * * 4'; // 09.00 Thursdays
+const endSearch = '00 00 12 * * 4'; // 12.00 Thursdays
+const resetSearch = '00 00 9 * * 5'; // 09.00 Fridays
 
 if (token && adminUserName && listPath) {
   const roundpiecesBot = new RoundpiecesBot({
