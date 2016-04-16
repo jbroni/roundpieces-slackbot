@@ -25,6 +25,7 @@ class MessageService {
     • \`help\`: Prints this help
     • \`setResponsible username\`: Sets user with \`username\` as the new responsible
     • \`skip\`: Skips next meeting
+    • \`start\`: Invokes new search immediately. Useful for virtual Fridays.
     `);
   }
 

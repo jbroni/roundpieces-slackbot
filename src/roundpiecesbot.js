@@ -64,10 +64,46 @@ class RoundpiecesBot extends Bot {
 
   _setupCronJobs() {
     const cronRanges = this.settings.cronRanges;
-    //TODO also let administrator invoke script directly in case of virtual Friday
     new CronJob(cronRanges.start, () => this._startResponsibleSearch(), null, true);
     new CronJob(cronRanges.end, () => this._endResponsibleSearch(), null, true);
     new CronJob(cronRanges.reset, () => this._reset(), null, true);
+  }
+
+  _setupOneTimeJobs() {
+    const endDate = this._getSearchEndTime();
+    const resetDate = this._getResetTime();
+
+    this._startResponsibleSearch();
+    new CronJob(endDate, () => this._endResponsibleSearch(), null, true);
+    new CronJob(resetDate, () => this._reset(), null, true);
+  }
+
+  /**
+   * End time defaults to today at 12.00. If the search is started after 12.00, it defaults to an hour after the script
+   * was invoked.
+   * Doesn't handle the case where the script is invoked after 23.00.
+   */
+  _getSearchEndTime() {
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setHours(12);
+    endDate.setMinutes(0);
+
+    if (endDate < now) {
+      endDate.setHours(now.getHours() + 1);
+      endDate.setMinutes(now.getMinutes());
+    }
+    return endDate;
+  }
+
+  /**
+   * Reset time defaults to today at 23.00.
+   * Doesn't handle the case where the script is invoked after 23.00.
+   */
+  _getResetTime() {
+    const resetDate = new Date();
+    resetDate.setHours(23);
+    return resetDate;
   }
 
   _startResponsibleSearch() {
@@ -119,6 +155,9 @@ class RoundpiecesBot extends Bot {
               break;
             case 'skip':
               this._skipNextMeeting();
+              break;
+            case 'start':
+              this._setupOneTimeJobs();
               break;
             default:
               this.messageService.unknownCommand(participant.username);
