@@ -213,6 +213,9 @@ class RoundpiecesBot extends Bot {
           case 'uptime':
             this._printUptime(participant.username);
             break;
+          case 'status':
+            this.messageService.status(participant.username);
+            break;
           case 'next':
             this.messageService.next(participant.username);
             break;

@@ -1,6 +1,7 @@
 'use strict';
 
 const AttendanceEnum = require('./participant').AttendanceEnum;
+const States = require('./states').States;
 
 class MessageService {
   constructor(messageFunction, model, store) {
@@ -56,6 +57,7 @@ class MessageService {
   • \`help\`, \`?\`: Prints this help
   • \`admin help\`: Prints available admin commands
   • \`uptime\`: Prints how long I've been alive
+  • \`status\`: Prints current participation status
   • \`next\`: Prints who is going to bring roundpieces next time
   • \`list\`: Prints ordered list of people participating in the roundpieces arrangement
   • \`yes\`: Indicate that you will be attending the next meeting
@@ -120,7 +122,6 @@ There's currently ${this.model.getParticipantCount()} participants:
 
   participationList() {
     const attending = this.model.getParticipantLinksByAttendance(AttendanceEnum.ATTENDING);
-    const notAttending = this.model.getParticipantLinksByAttendance(AttendanceEnum.NOT_ATTENDING);
     const unknown = this.model.getParticipantLinksByAttendance(AttendanceEnum.UNKNOWN);
 
     let bringCake = '';
@@ -131,9 +132,7 @@ There's currently ${this.model.getParticipantCount()} participants:
     this.sendMessage(this.model.getResponsible().username,
         `You will have to bring roundpieces for *${attending.length + unknown.length}* people tomorrow. ${bringCake}
 
-Attending: ${attending.join(', ')}
-Not attending: ${notAttending.join(', ')}
-Unknown attendance: ${unknown.join(', ')}`
+${this._generateParticipationList()}`
     );
   }
 
@@ -164,6 +163,18 @@ If you won't attend, please respond \`no\`.`));
     this._messageAdmin(`Current state is "${state.type}". Found reponsible: \`${state.foundResponsible}\`.`);
   }
 
+  status(userName) {
+    const state = this.store.getState();
+    if (state.type === States.SEARCH_INITIATED || state.type === States.AWAITING_MEETING) {
+      this.sendMessage(userName, `Responsible: ${this.model.getResponsible().link} (${state.foundResponsible ? 'confirmed' : 'not confirmed'})
+
+${this._generateParticipationList()}`);
+    }
+    else {
+      this.sendMessage(userName, 'Participation count has not yet begun.');
+    }
+  }
+
   unknownCommand(userName) {
     this.sendMessage(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
   }
@@ -182,6 +193,16 @@ If you won't attend, please respond \`no\`.`));
 
   _messageResponsible(message) {
     this.sendMessage(this.model.getResponsible().username, message);
+  }
+
+  _generateParticipationList() {
+    const attending = this.model.getParticipantLinksByAttendance(AttendanceEnum.ATTENDING);
+    const notAttending = this.model.getParticipantLinksByAttendance(AttendanceEnum.NOT_ATTENDING);
+    const unknown = this.model.getParticipantLinksByAttendance(AttendanceEnum.UNKNOWN);
+
+    return `Attending: ${attending.join(', ')}
+Not attending: ${notAttending.join(', ')}
+Unknown attendance: ${unknown.join(', ')}`;
   }
 }
 
