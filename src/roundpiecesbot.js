@@ -28,6 +28,14 @@ class RoundpiecesBot extends Bot {
     return store.getState();
   }
 
+  get hasSentSkipMessage() {
+    return this._hasSentSkipMessage;
+  }
+
+  set hasSentSkipMessage(sent) {
+    this._hasSentSkipMessage = sent;
+  }
+
   _onStart() {
     this.startTime = Date.now();
 
@@ -54,6 +62,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _setupStoreSubscription() {
+    this.hasSentSkipMessage = false;
     store.subscribe(() => this._onStateChanged(store.getState()));
   }
 
@@ -154,6 +163,7 @@ class RoundpiecesBot extends Bot {
 
   _onResetting() {
     this.model.reset();
+    this.hasSentSkipMessage = false;
     store.dispatch({type: Actions.RESAT});
   }
 
@@ -350,7 +360,10 @@ class RoundpiecesBot extends Bot {
   }
 
   _onSkipped() {
-    this.messageService.skipping();
+    if (!this.hasSentSkipMessage) {
+      this.messageService.skipping();
+      this.hasSentSkipMessage = true;
+    }
   }
 
   _notifyParticipants() {
