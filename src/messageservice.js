@@ -3,9 +3,10 @@
 const AttendanceEnum = require('./participant').AttendanceEnum;
 
 class MessageService {
-  constructor(messageFunction, model) {
+  constructor(messageFunction, model, store) {
     this._sendMessage = messageFunction;
     this._model = model;
+    this._store = store;
   }
 
   get sendMessage() {
@@ -14,6 +15,10 @@ class MessageService {
 
   get model() {
     return this._model;
+  }
+
+  get store() {
+    return this._store;
   }
 
   accepted() {
@@ -26,6 +31,7 @@ class MessageService {
     • \`setResponsible username\`: Sets user with \`username\` as the new responsible
     • \`skip\`: Skips next meeting
     • \`start\`: Invokes new search immediately. Useful for virtual Fridays.
+    • \`state\`: Get current state of the system.
     `);
   }
 
@@ -151,6 +157,11 @@ If you won't attend, please respond \`no\`.`));
 
   skipping() {
     this._messageAdmin('Next meeting will be skipped.');
+  }
+
+  state() {
+    const state = this.store.getState();
+    this._messageAdmin(`Current state is "${state.type}". Found reponsible: \`${state.foundResponsible}\`.`);
   }
 
   status(userName, uptime) {

@@ -15,7 +15,7 @@ class RoundpiecesBot extends Bot {
     super(settings);
     this.settings = settings;
     this.model = new Model(this.settings.adminUserName);
-    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message), this.model);
+    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message), this.model, store);
     store.dispatch({type: Actions.INITIALIZE});
   }
 
@@ -181,6 +181,9 @@ class RoundpiecesBot extends Bot {
               break;
             case 'start':
               this._setupOneTimeJobs();
+              break;
+            case 'state':
+              this.messageService.state();
               break;
             default:
               this.messageService.unknownCommand(participant.username);
