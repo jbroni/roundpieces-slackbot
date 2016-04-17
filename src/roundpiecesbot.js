@@ -103,6 +103,7 @@ class RoundpiecesBot extends Bot {
   _getResetTime() {
     const resetDate = new Date();
     resetDate.setHours(23);
+    resetDate.setMinutes(0);
     return resetDate;
   }
 
