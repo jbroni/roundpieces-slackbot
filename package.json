@@ -24,6 +24,7 @@
   "dependencies": {
     "cron": "^1.1.0",
     "lodash": "^4.6.1",
+    "redux": "^3.4.0",
     "slackbots": "^0.5.1"
   },
   "devDependencies": {
