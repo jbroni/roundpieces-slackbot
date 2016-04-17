@@ -16,8 +16,8 @@ class MessageService {
     return this._model;
   }
 
-  accepted(userName) {
-    this.sendMessage(userName, 'Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
+  accepted() {
+    this._messageResponsible('Thank you! I will notify you at 12.00 with a list of who will be attending the next roundpieces meeting.');
   }
 
   adminHelp() {
@@ -27,6 +27,10 @@ class MessageService {
     • \`skip\`: Skips next meeting
     • \`start\`: Invokes new search immediately. Useful for virtual Fridays.
     `);
+  }
+
+  alreadyAccepted() {
+    this._messageResponsible(`You have already accepted. If you wish to change this, please contact ${this.model.adminUser.link}.`);
   }
 
   attending(userName) {

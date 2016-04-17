@@ -6,23 +6,17 @@ const CronJob = require('cron').CronJob;
 const Model = require('./model');
 const MessageService = require('./messageservice');
 const AttendanceEnum = require('./participant').AttendanceEnum;
-
-const States = Object.freeze({
-  IDLE: 'idle',
-  ASKED_RESPONSBILE: 'asked responsible',
-  FOUND_RESPONSIBLE: 'found responsible',
-  NO_RESPONSIBLE: 'no responsible',
-  AWAITING_MEETING: 'awaiting meeting',
-  SKIPPED: 'skipped'
-});
+const store = require('./states').store;
+const Actions = require('./states').Actions;
+const States = require('./states').States;
 
 class RoundpiecesBot extends Bot {
   constructor(settings) {
     super(settings);
     this.settings = settings;
-    this.state = States.IDLE;
     this.model = new Model(this.settings.adminUserName);
     this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message), this.model);
+    store.dispatch({type: Actions.INITIALIZE});
   }
 
   run() {
@@ -31,11 +25,7 @@ class RoundpiecesBot extends Bot {
   }
 
   get state() {
-    return this._state;
-  }
-
-  set state(state) {
-    this._state = state;
+    return store.getState();
   }
 
   _onStart() {
@@ -56,9 +46,39 @@ class RoundpiecesBot extends Bot {
         return;
       }
       this.model.setResponsible(this.model.participants[0]);
+      this._setupStoreSubscription();
       this._setupCronJobs();
 
       this.messageService.botActivated(this.settings.name);
+    }
+  }
+
+  _setupStoreSubscription() {
+    store.subscribe(() => this._onStateChanged(store.getState()));
+  }
+
+  _onStateChanged(state) {
+    switch (state.type) {
+      case States.SEARCH_INITIATED:
+        if (state.foundResponsible) {
+          this._onFoundResponsible();
+        }
+        else {
+          this._onSearchInitiated();
+        }
+        break;
+      case States.AWAITING_MEETING:
+        this._onAwaitingMeeting(state.foundResponsible);
+        break;
+      case States.RESETTING:
+        this._onResetting();
+        break;
+      case States.NO_ATTENDANCE:
+        this._onNoAttendance();
+        break;
+      case States.SKIPPED:
+        this._onSkipped();
+        break;
     }
   }
 
@@ -108,31 +128,33 @@ class RoundpiecesBot extends Bot {
   }
 
   _startResponsibleSearch() {
-    if (this.state !== States.SKIPPED) {
-      this.state = States.ASKED_RESPONSBILE;
-      this._notifyParticipants();
-    }
+    store.dispatch({type: Actions.INITIATE_SEARCH});
+  }
+
+  _onSearchInitiated() {
+    this._notifyParticipants();
   }
 
   _endResponsibleSearch() {
-    switch (this.state) {
-      case States.FOUND_RESPONSIBLE:
-        this.messageService.participationList();
-        break;
-      case States.ASKED_RESPONSBILE:
-        this.messageService.noResponsibleResponse();
-        break;
-      case States.NO_RESPONSIBLE:
-      case States.SKIPPED:
-        //No attendance - don't do anything
-        break;
+    store.dispatch({type: Actions.END_SEARCH});
+  }
+
+  _onAwaitingMeeting(foundResponsible) {
+    if (foundResponsible) {
+      this.messageService.participationList();
     }
-    this.state = States.AWAITING_MEETING;
+    else {
+      this.messageService.noResponsibleResponse();
+    }
   }
 
   _reset() {
+    store.dispatch({type: Actions.RESET});
+  }
+
+  _onResetting() {
     this.model.reset();
-    this.state = States.IDLE;
+    store.dispatch({type: Actions.RESAT});
   }
 
   _onMessage(message) {
@@ -210,19 +232,14 @@ class RoundpiecesBot extends Bot {
   }
 
   _accept(participant) {
-    if (!participant.responsible) {
-      this.messageService.notResponsible(participant.username);
-      return;
+    if (this._canAcceptOrReject(participant)) {
+      store.dispatch({type: Actions.FOUND_RESPONSIBLE});
     }
+  }
 
-    if (this.state !== States.ASKED_RESPONSBILE) {
-      this.messageService.wrongTime(participant.username);
-      return;
-    }
-
-    this.messageService.accepted(participant.username);
-    participant.attending = AttendanceEnum.ATTENDING;
-    this.state = States.FOUND_RESPONSIBLE;
+  _onFoundResponsible() {
+    this.messageService.accepted();
+    this.model.getResponsible().attending = AttendanceEnum.ATTENDING;
     this._updateList();
   }
 
@@ -238,28 +255,41 @@ class RoundpiecesBot extends Bot {
   }
 
   _reject(participant) {
+    if (this._canAcceptOrReject(participant)) {
+      this.messageService.rejected(participant.username);
+      participant.attending = AttendanceEnum.NOT_ATTENDING;
+      const nextUser = this.model.getNextParticipant(participant);
+      if (!nextUser) {
+        store.dispatch({type: Actions.NO_ATTENDANCE});
+      }
+      else {
+        this.model.setResponsible(nextUser);
+        this.messageService.notifyResponsible();
+      }
+    }
+  }
+
+  _onNoAttendance() {
+    this.messageService.nobodyAttending();
+    this.model.setResponsible(this.model.participants[0]);
+  }
+
+  _canAcceptOrReject(participant) {
     if (!participant.responsible) {
       this.messageService.notResponsible(participant.username);
-      return;
+      return false;
     }
 
-    if (this.state !== States.ASKED_RESPONSBILE) {
+    if (this.state.type !== States.SEARCH_INITIATED) {
       this.messageService.wrongTime(participant.username);
-      return;
+      return false;
     }
 
-    this.messageService.rejected(participant.username);
-    participant.attending = AttendanceEnum.NOT_ATTENDING;
-    const nextUser = this.model.getNextParticipant(participant);
-    if (!nextUser) {
-      this.state = States.NO_RESPONSIBLE;
-      this.messageService.nobodyAttending();
-      this.model.setResponsible(this.model.participants[0]);
+    if (this.state.foundResponsible) {
+      this.messageService.alreadyAccepted();
+      return false;
     }
-    else {
-      this.model.setResponsible(nextUser);
-      this.messageService.notifyResponsible();
-    }
+    return true;
   }
 
   _attending(participant) {
@@ -293,11 +323,11 @@ class RoundpiecesBot extends Bot {
   }
 
   _canChangeAttendanceStatus() {
-    return this.state === States.ASKED_RESPONSBILE || this.state === States.FOUND_RESPONSIBLE;
+    return this.state.type === States.SEARCH_INITIATED;
   }
 
-  _changeResponsible(newResposibleUserName) {
-    const responsible = this.model.getParticipantFromUserName(newResposibleUserName);
+  _changeResponsible(newResponsibleUserName) {
+    const responsible = this.model.getParticipantFromUserName(newResponsibleUserName);
     if (responsible) {
       if (responsible !== this.model.getResponsible()) {
         this.messageService.noLongerResponsible();
@@ -308,12 +338,15 @@ class RoundpiecesBot extends Bot {
       this.messageService.responsibleChanged(responsible.username);
     }
     else {
-      this.messageService.notParticipant(newResposibleUserName);
+      this.messageService.notParticipant(newResponsibleUserName);
     }
   }
 
   _skipNextMeeting() {
-    this.state = States.SKIPPED;
+    store.dispatch({type: Actions.SKIP});
+  }
+
+  _onSkipped() {
     this.messageService.skipping();
   }
 

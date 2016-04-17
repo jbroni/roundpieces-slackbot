@@ -5,14 +5,17 @@ const States = Object.freeze({
   IDLE: 'idle',
   SEARCH_INITIATED: 'search initiated',
   AWAITING_MEETING: 'awaiting meeting',
+  NO_ATTENDANCE: 'no attendance',
   RESETTING: 'resetting',
   SKIPPED: 'skipped'
 });
 
 const Actions = Object.freeze({
+  INITIALIZE: 'initialize',
   INITIATE_SEARCH: 'initiate search',
   FOUND_RESPONSIBLE: 'found responsible',
   END_SEARCH: 'end search',
+  NO_ATTENDANCE: 'no attendance',
   RESET: 'reset',
   RESAT: 'resat',
   SKIP: 'skip'
@@ -20,7 +23,7 @@ const Actions = Object.freeze({
 
 const initialState = {
   type: States.IDLE,
-  responsible: null
+  foundResponsible: false
 };
 
 function changeState(state, action) {
@@ -32,9 +35,11 @@ function changeState(state, action) {
     case Actions.INITIATE_SEARCH:
       return initiateSearch(state);
     case Actions.FOUND_RESPONSIBLE:
-      return responsibleFound(state, action.responsible);
+      return responsibleFound(state);
     case Actions.END_SEARCH:
       return endSearch(state);
+    case Actions.NO_ATTENDANCE:
+      return noAttendance(state);
     case Actions.RESET:
       return reset(state);
     case Actions.RESAT:
@@ -53,9 +58,9 @@ function initiateSearch(state) {
   return state;
 }
 
-function responsibleFound(state, responsible) {
+function responsibleFound(state) {
   if (state.type === States.SEARCH_INITIATED) {
-    return Object.assign({}, state, {responsible: responsible});
+    return Object.assign({}, state, {foundResponsible: true});
   }
   return state;
 }
@@ -67,10 +72,18 @@ function endSearch(state) {
   return state;
 }
 
+function noAttendance(state) {
+  if (state.type === States.SEARCH_INITIATED) {
+    return Object.assign({}, state, {type: States.NO_ATTENDANCE});
+  }
+  return state;
+}
+
 function reset(state) {
   switch (state.type) {
     case States.SEARCH_INITIATED:
     case States.AWAITING_MEETING:
+    case States.NO_ATTENDANCE:
       return Object.assign({}, state, {type: States.RESETTING});
     case States.SKIPPED:
       return Object.assign({}, state, {type: States.IDLE});
@@ -81,7 +94,7 @@ function reset(state) {
 
 function resat(state) {
   if (state.type === States.RESETTING) {
-    return Object.assign({}, state, {type: States.IDLE, responsible: null});
+    return Object.assign({}, state, {type: States.IDLE, foundResponsible: false});
   }
   return state;
 }
@@ -97,5 +110,6 @@ const store = createStore(changeState);
 
 module.exports = {
   store: store,
-  Actions: Actions
+  Actions: Actions,
+  States: States
 };
