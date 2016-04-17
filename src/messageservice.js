@@ -55,7 +55,7 @@ class MessageService {
     this.sendMessage(userName, `Here is a list of commands:
   • \`help\`, \`?\`: Prints this help
   • \`admin help\`: Prints available admin commands
-  • \`status\`: Prints how long I've been alive
+  • \`uptime\`: Prints how long I've been alive
   • \`next\`: Prints who is going to bring roundpieces next time
   • \`list\`: Prints ordered list of people participating in the roundpieces arrangement
   • \`yes\`: Indicate that you will be attending the next meeting
@@ -164,12 +164,12 @@ If you won't attend, please respond \`no\`.`));
     this._messageAdmin(`Current state is "${state.type}". Found reponsible: \`${state.foundResponsible}\`.`);
   }
 
-  status(userName, uptime) {
-    this.sendMessage(userName, `I have been alive for *${uptime} ms!*`);
-  }
-
   unknownCommand(userName) {
     this.sendMessage(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
+  }
+
+  uptime(userName, uptime) {
+    this.sendMessage(userName, `I have been alive for *${uptime} ms!*`);
   }
 
   wrongTime(userName) {

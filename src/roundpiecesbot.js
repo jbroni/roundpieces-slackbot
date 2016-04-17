@@ -210,8 +210,8 @@ class RoundpiecesBot extends Bot {
           case '?':
             this.messageService.help(participant.username);
             break;
-          case 'status':
-            this._printStatus(participant.username);
+          case 'uptime':
+            this._printUptime(participant.username);
             break;
           case 'next':
             this.messageService.next(participant.username);
@@ -239,9 +239,9 @@ class RoundpiecesBot extends Bot {
     }
   }
 
-  _printStatus(userName) {
+  _printUptime(userName) {
     const uptime = Date.now() - this.startTime;
-    this.messageService.status(userName, uptime);
+    this.messageService.uptime(userName, uptime);
   }
 
   _accept(participant) {
