@@ -1,6 +1,6 @@
 {
   "name": "roundpieces-slackbot",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A slack bot for administrating roundpieces",
   "main": "bin/startBot.js",
   "scripts": {
