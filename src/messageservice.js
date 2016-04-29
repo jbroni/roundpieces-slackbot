@@ -52,10 +52,15 @@ class MessageService {
     this._messageAdmin(`I'm afraid I've encountered an error: ${error}`);
   }
 
-  help(userName) {
-    this.sendMessage(userName, `Here is a list of commands:
-  • \`help\`, \`?\`: Prints this help
-  • \`admin help\`: Prints available admin commands
+  help(participant) {
+    let adminHelp = '';
+    if (participant.admin) {
+      adminHelp = `
+  • \`admin help\`: Prints available admin commands`;
+    }
+
+    this.sendMessage(participant.username, `Here is a list of commands:
+  • \`help\`, \`?\`: Prints this help${adminHelp}
   • \`uptime\`: Prints how long I've been alive
   • \`status\`: Prints current participation status
   • \`next\`: Prints who is going to bring roundpieces next time

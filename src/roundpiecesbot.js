@@ -210,7 +210,7 @@ class RoundpiecesBot extends Bot {
         switch (message.text.toLowerCase()) {
           case 'help':
           case '?':
-            this.messageService.help(participant.username);
+            this.messageService.help(participant);
             break;
           case 'uptime':
             this._printUptime(participant.username);
