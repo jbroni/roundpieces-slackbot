@@ -136,7 +136,7 @@ ${this._generateParticipationList()}`
     this.model.participants
         .filter((participant) => !participant.responsible && participant.isSlackUser())
         .forEach((participant) => this.sendMessage(participant.username,
-            `To help the responsible buying the correct number of roundpieces, please respond to this message before 12.00 today.
+            `To help ${this.model.getResponsible().link} buy the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
 If you won't attend, please respond \`no\`.`));
   }
