@@ -15,7 +15,7 @@ class RoundpiecesBot extends Bot {
     super(settings);
     this.settings = settings;
     this.model = new Model(this.settings.adminUserName);
-    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message), this.model, store);
+    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message, {as_user: true}), this.model, store);
     store.dispatch({type: Actions.INITIALIZE});
   }
 
@@ -170,7 +170,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _onMessage(message) {
-    if (message.type === 'message' && message.user) {
+    if (message.type === 'message' && message.user && !message.bot_id) {
       const participant = this.model.getParticipantFromId(message.user);
       if (!participant) {
         this._reportError(`Unknown user id: ${message.user}`);
