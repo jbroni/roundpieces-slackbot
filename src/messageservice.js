@@ -100,16 +100,12 @@ Current list: ${this.model.getParticipantLinks().join(', ')}`);
     this.sendMessage(userName, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
   }
 
+  notifyNewResponsible(oldResponsible) {
+    this._notifyResponsible(`${oldResponsible.link} was not able to bring roundpieces next time. You're are the next one on the list so it will be your responsibility instead.`);
+  }
+
   notifyResponsible() {
-    if (this.model.getResponsible().isSlackUser()) {
-      this._messageResponsible(`It is your turn to bring roundpieces next time!
-Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
-There's currently ${this.model.getParticipantCount()} participants:
-  ${this.model.getParticipantLinks().join(', ')}`);
-    }
-    else {
-      this._messageAdmin(`It is non-slack user *${this.model.getResponsible().link}*'s turn to bring roundpieces next time. Please notify the participant manually.`);
-    }
+    this._notifyResponsible('It is your turn to bring roundpieces next time!');
   }
 
   notParticipant(participant) {
@@ -203,6 +199,18 @@ ${this._generateParticipationList()}`);
     return `Attending: ${attending.join(', ')}
 Not attending: ${notAttending.join(', ')}
 Unknown attendance: ${unknown.join(', ')}`;
+  }
+
+  _notifyResponsible(message) {
+    if (this.model.getResponsible().isSlackUser()) {
+      this._messageResponsible(`${message}
+Please respond before 12.00 today with either \`accept\` to indicate that you will bring them, or \`reject\` if you're unable.
+There's currently ${this.model.getParticipantCount()} participants:
+  ${this.model.getParticipantLinks().join(', ')}`);
+    }
+    else {
+      this._messageAdmin(`It is non-slack user *${this.model.getResponsible().link}*'s turn to bring roundpieces next time. Please notify the participant manually.`);
+    }
   }
 }
 

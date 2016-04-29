@@ -282,7 +282,7 @@ class RoundpiecesBot extends Bot {
       }
       else {
         this.model.setResponsible(nextUser);
-        this.messageService.notifyResponsible();
+        this.messageService.notifyNewResponsible(participant);
       }
     }
   }
