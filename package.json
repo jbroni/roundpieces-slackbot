@@ -4,7 +4,8 @@
   "description": "A slack bot for administrating roundpieces",
   "main": "bin/startBot.js",
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "lint": "node_modules/eslint/bin/eslint.js -c .eslintrc.yml src/*.js"
   },
   "repository": {
     "type": "git",
