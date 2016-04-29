@@ -293,13 +293,13 @@ class RoundpiecesBot extends Bot {
   }
 
   _canAcceptOrReject(participant) {
-    if (!participant.responsible) {
-      this.messageService.notResponsible(participant.username);
+    if (this.state.type !== States.SEARCH_INITIATED) {
+      this.messageService.wrongTime(participant.username);
       return false;
     }
 
-    if (this.state.type !== States.SEARCH_INITIATED) {
-      this.messageService.wrongTime(participant.username);
+    if (!participant.responsible) {
+      this.messageService.notResponsible(participant.username);
       return false;
     }
 
@@ -311,37 +311,30 @@ class RoundpiecesBot extends Bot {
   }
 
   _attending(participant) {
-    if (participant.responsible) {
-      this.messageService.isResponsible();
-      return;
+    if (this._canChangeAttendanceStatus(participant)) {
+      participant.attending = AttendanceEnum.ATTENDING;
+      this.messageService.attending(participant.username);
     }
-
-    if (!this._canChangeAttendanceStatus()) {
-      this.messageService.wrongTime(participant.username);
-      return;
-    }
-
-    participant.attending = AttendanceEnum.ATTENDING;
-    this.messageService.attending(participant.username);
   }
 
   _notAttending(participant) {
-    if (participant.responsible) {
-      this.messageService.isResponsible();
-      return;
+    if (this._canChangeAttendanceStatus(participant)) {
+      participant.attending = AttendanceEnum.NOT_ATTENDING;
+      this.messageService.notAttending(participant.username);
     }
-
-    if (!this._canChangeAttendanceStatus()) {
-      this.messageService.wrongTime(participant.username);
-      return;
-    }
-
-    participant.attending = AttendanceEnum.NOT_ATTENDING;
-    this.messageService.notAttending(participant.username);
   }
 
-  _canChangeAttendanceStatus() {
-    return this.state.type === States.SEARCH_INITIATED;
+  _canChangeAttendanceStatus(participant) {
+    if (this.state.type !== States.SEARCH_INITIATED) {
+      this.messageService.wrongTime(participant.username);
+      return false;
+    }
+
+    if (participant.responsible) {
+      this.messageService.isResponsible();
+      return false;
+    }
+    return true;
   }
 
   _changeResponsible(newResponsibleUserName) {
