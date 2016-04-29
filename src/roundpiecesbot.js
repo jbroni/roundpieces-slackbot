@@ -28,12 +28,12 @@ class RoundpiecesBot extends Bot {
     return store.getState();
   }
 
-  get hasSentSkipMessage() {
-    return this._hasSentSkipMessage;
+  get previousState() {
+    return this._previousState;
   }
 
-  set hasSentSkipMessage(sent) {
-    this._hasSentSkipMessage = sent;
+  set previousState(state) {
+    this._previousState = state;
   }
 
   _onStart() {
@@ -62,32 +62,35 @@ class RoundpiecesBot extends Bot {
   }
 
   _setupStoreSubscription() {
-    this.hasSentSkipMessage = false;
+    this.previousState = store.getState();
     store.subscribe(() => this._onStateChanged(store.getState()));
   }
 
   _onStateChanged(state) {
-    switch (state.type) {
-      case States.SEARCH_INITIATED:
-        if (state.foundResponsible) {
-          this._onFoundResponsible();
-        }
-        else {
-          this._onSearchInitiated();
-        }
-        break;
-      case States.AWAITING_MEETING:
-        this._onAwaitingMeeting(state.foundResponsible);
-        break;
-      case States.RESETTING:
-        this._onResetting();
-        break;
-      case States.NO_ATTENDANCE:
-        this._onNoAttendance();
-        break;
-      case States.SKIPPED:
-        this._onSkipped();
-        break;
+    if (state !== this.previousState) {
+      this.previousState = state;
+      switch (state.type) {
+        case States.SEARCH_INITIATED:
+          if (state.foundResponsible) {
+            this._onFoundResponsible();
+          }
+          else {
+            this._onSearchInitiated();
+          }
+          break;
+        case States.AWAITING_MEETING:
+          this._onAwaitingMeeting(state.foundResponsible);
+          break;
+        case States.RESETTING:
+          this._onResetting();
+          break;
+        case States.NO_ATTENDANCE:
+          this._onNoAttendance();
+          break;
+        case States.SKIPPED:
+          this._onSkipped();
+          break;
+      }
     }
   }
 
@@ -163,7 +166,6 @@ class RoundpiecesBot extends Bot {
 
   _onResetting() {
     this.model.reset();
-    this.hasSentSkipMessage = false;
     store.dispatch({type: Actions.RESAT});
   }
 
@@ -363,10 +365,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _onSkipped() {
-    if (!this.hasSentSkipMessage) {
-      this.messageService.skipping();
-      this.hasSentSkipMessage = true;
-    }
+    this.messageService.skipping();
   }
 
   _notifyParticipants() {
