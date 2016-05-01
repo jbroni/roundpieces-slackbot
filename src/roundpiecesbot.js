@@ -3,6 +3,7 @@
 const Bot = require('slackbots');
 const fs = require('fs');
 const CronJob = require('cron').CronJob;
+const _ = require('lodash');
 const Model = require('./model');
 const MessageService = require('./messageservice');
 const AttendanceEnum = require('./participant').AttendanceEnum;
@@ -250,7 +251,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _accept(participant) {
-    if (this._canAcceptOrReject(participant)) {
+    if (this._canAccept(participant)) {
       store.dispatch({type: Actions.FOUND_RESPONSIBLE});
     }
   }
@@ -273,7 +274,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _reject(participant) {
-    if (this._canAcceptOrReject(participant)) {
+    if (this._canReject(participant)) {
       this.messageService.rejected(participant.username);
       participant.attending = AttendanceEnum.NOT_ATTENDING;
       const nextUser = this.model.getNextParticipant(participant);
@@ -282,7 +283,9 @@ class RoundpiecesBot extends Bot {
       }
       else {
         this.model.setResponsible(nextUser);
-        this.messageService.notifyNewResponsible(participant);
+        if (this.state.type === States.SEARCH_INITIATED) {
+          this.messageService.notifyNewResponsible(participant);
+        }
       }
     }
   }
@@ -292,8 +295,16 @@ class RoundpiecesBot extends Bot {
     this.model.setResponsible(this.model.participants[0]);
   }
 
-  _canAcceptOrReject(participant) {
-    if (this.state.type !== States.SEARCH_INITIATED) {
+  _canAccept(participant) {
+    return this._canAcceptOrReject(participant, [States.SEARCH_INITIATED]);
+  }
+
+  _canReject(participant) {
+    return this._canAcceptOrReject(participant, [States.SEARCH_INITIATED, States.IDLE]);
+  }
+
+  _canAcceptOrReject(participant, legalStates) {
+    if (!_.includes(legalStates, this.state.type)) {
       this.messageService.wrongTime(participant.username);
       return false;
     }
