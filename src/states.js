@@ -84,9 +84,8 @@ function reset(state) {
     case States.SEARCH_INITIATED:
     case States.AWAITING_MEETING:
     case States.NO_ATTENDANCE:
-      return Object.assign({}, state, {type: States.RESETTING});
     case States.SKIPPED:
-      return Object.assign({}, state, {type: States.IDLE});
+      return Object.assign({}, state, {type: States.RESETTING});
     default:
       return state;
   }
