@@ -41,7 +41,7 @@ class MessageService {
   }
 
   attending(userName) {
-    this.sendMessage(userName, 'Thank you for your response. I have noted that you\'ll *be attending* tomorrow.');
+    this.sendMessage(userName, 'Thank you for your response. I have noted that you\'ll *be attending* the next meeting.');
   }
 
   botActivated(botName) {
@@ -102,7 +102,7 @@ Current list: ${this.model.getParticipantLinks().join(', ')}`);
   }
 
   notAttending(userName) {
-    this.sendMessage(userName, 'Thank you for your response. I have noted that you will *not be attending* tomorrow.');
+    this.sendMessage(userName, 'Thank you for your response. I have noted that you will *not be attending* the next meeting.');
   }
 
   notifyNewResponsible(oldResponsible) {
