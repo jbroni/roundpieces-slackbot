@@ -325,7 +325,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _canChangeAttendanceStatus(participant) {
-    if (this.state.type !== States.SEARCH_INITIATED) {
+    if (this.state.type !== States.SEARCH_INITIATED && this.state.type !== States.IDLE) {
       this.messageService.wrongTime(participant.username);
       return false;
     }

@@ -139,7 +139,7 @@ ${this._generateParticipationList()}`
 
   queryForAttendance() {
     this.model.participants
-        .filter((participant) => !participant.responsible && participant.isSlackUser())
+        .filter((participant) => !participant.responsible && participant.isSlackUser() && participant.attending === AttendanceEnum.UNKNOWN)
         .forEach((participant) => this.sendMessage(participant.username,
             `To help ${this.model.getResponsible().link} buy the correct number of roundpieces, please respond to this message before 12.00 today.
 Please respond \`yes\` if you're attending the roundpieces meeting tomorrow.
