@@ -1,7 +1,6 @@
 'use strict';
 
 const AttendanceEnum = require('./participant').AttendanceEnum;
-const States = require('./states').States;
 
 class MessageService {
   constructor(messageFunction, model, store) {
@@ -166,14 +165,9 @@ If you won't attend, please respond \`no\`.`));
 
   status(userName) {
     const state = this.store.getState();
-    if (state.type === States.SEARCH_INITIATED || state.type === States.AWAITING_MEETING) {
-      this.sendMessage(userName, `Responsible: ${this.model.getResponsible().link} (${state.foundResponsible ? 'confirmed' : 'not confirmed'})
+    this.sendMessage(userName, `Responsible: ${this.model.getResponsible().link} (${state.foundResponsible ? 'confirmed' : 'not confirmed'})
 
 ${this._generateParticipationList()}`);
-    }
-    else {
-      this.sendMessage(userName, 'Participation count has not yet begun.');
-    }
   }
 
   unknownCommand(userName) {
