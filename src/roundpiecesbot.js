@@ -16,13 +16,21 @@ class RoundpiecesBot extends Bot {
     super(settings);
     this.settings = settings;
     this.model = new Model(this.settings.adminUserName);
-    this.messageService = new MessageService((userName, message) => this.postMessageToUser(userName, message, {as_user: true}), this.model, store);
+    this.messageService = new MessageService(
+        (userName, message) => this.postMessageToUser(userName, message, {as_user: true}),
+        (...log) => this._logWithDate(log),
+        this.model,
+        store
+    );
     store.dispatch({type: Actions.INITIALIZE});
   }
 
   run() {
     this.on('start', this._onStart);
     this.on('message', this._onMessage);
+    this.on('open', () => this._logWithDate('Web socket connection opened'));
+    this.on('close', () => this._logWithDate('Web socket connection closed'));
+    this.on('error', () => this._logWithDate('Error while connecting to slack'));
   }
 
   get state() {
@@ -59,6 +67,7 @@ class RoundpiecesBot extends Bot {
       this._setupCronJobs();
 
       this.messageService.botActivated(this.settings.name);
+      this._logWithDate('Bot activated');
     }
   }
 
@@ -69,6 +78,7 @@ class RoundpiecesBot extends Bot {
 
   _onStateChanged(state) {
     if (state !== this.previousState) {
+      this._logWithDate(`State changed from ${this.previousState.type} to ${state.type}`);
       this.previousState = state;
       switch (state.type) {
         case States.SEARCH_INITIATED:
@@ -175,7 +185,7 @@ class RoundpiecesBot extends Bot {
       const participant = this.model.getParticipantFromId(message.user);
       if (!participant) {
         this._reportError(`Unknown user id: ${message.user}`);
-        console.log(message);
+        this._logWithDate(message);
         return;
       }
 
@@ -199,7 +209,7 @@ class RoundpiecesBot extends Bot {
               this.messageService.state();
               break;
             default:
-              this.messageService.unknownCommand(participant.username);
+              this.messageService.unknownCommand(participant.username, message.text);
               break;
           }
         }
@@ -238,7 +248,7 @@ class RoundpiecesBot extends Bot {
             this._notAttending(participant);
             break;
           default:
-            this.messageService.unknownCommand(participant.username);
+            this.messageService.unknownCommand(participant.username, message.text);
             break;
         }
       }

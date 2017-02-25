@@ -3,8 +3,9 @@
 const AttendanceEnum = require('./participant').AttendanceEnum;
 
 class MessageService {
-  constructor(messageFunction, model, store) {
+  constructor(messageFunction, logFunction, model, store) {
     this._sendMessage = messageFunction;
+    this._logWithDate = logFunction;
     this._model = model;
     this._store = store;
   }
@@ -170,8 +171,9 @@ If you won't attend, please respond \`no\`.`));
 ${this._generateParticipationList()}`);
   }
 
-  unknownCommand(userName) {
+  unknownCommand(userName, message) {
     this.sendMessage(userName, 'I don\'t understand what you\'re asking :disappointed: Type `help` for a full list of commands that I understand.');
+    this._logWithDate(`Received unknown message: ${message}`);
   }
 
   uptime(userName, uptime) {
