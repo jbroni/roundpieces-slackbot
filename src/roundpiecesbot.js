@@ -383,8 +383,10 @@ class RoundpiecesBot extends Bot {
   }
 
   _logWithDate(...log) {
-    const date = new Date();
-    console.log(`${date.toLocaleDateString()} - ${date.toLocaleTimeString()}: ${log}`);
+    if (this.settings.log) {
+      const date = new Date();
+      console.log(`${date.toLocaleDateString()} - ${date.toLocaleTimeString()}: ${log}`);
+    }
   }
 }
 
