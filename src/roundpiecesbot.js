@@ -381,6 +381,11 @@ class RoundpiecesBot extends Bot {
     console.error(error);
     this.messageService.error(error);
   }
+
+  _logWithDate(...log) {
+    const date = new Date();
+    console.log(`${date.toLocaleDateString()} - ${date.toLocaleTimeString()}: ${log}`);
+  }
 }
 
 module.exports = RoundpiecesBot;
