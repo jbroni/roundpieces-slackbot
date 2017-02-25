@@ -18,7 +18,8 @@ if (token && adminUserName && listPath) {
       start: startSearch,
       end: endSearch,
       reset: resetSearch
-    }
+    },
+    log: true
   });
 
   roundpiecesBot.run();
