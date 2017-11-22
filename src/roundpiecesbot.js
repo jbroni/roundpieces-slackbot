@@ -29,7 +29,10 @@ class RoundpiecesBot extends Bot {
     this.on('start', this._onStart);
     this.on('message', this._onMessage);
     this.on('open', () => this._logWithDate('Web socket connection opened'));
-    this.on('close', () => this._logWithDate('Web socket connection closed'));
+    this.on('close', () => {
+      this._logWithDate('Web socket connection closed. Attempting to reconnect.');
+      this.connect();
+    });
     this.on('error', () => this._logWithDate('Error while connecting to slack'));
   }
 
@@ -181,77 +184,86 @@ class RoundpiecesBot extends Bot {
   }
 
   _onMessage(message) {
-    if (message.type === 'message' && message.user && !message.bot_id) {
-      const participant = this.model.getParticipantFromId(message.user);
-      if (!participant) {
-        this._reportError(`Unknown user id: ${message.user}`);
-        this._logWithDate(message);
-        return;
-      }
+    switch (message.type) {
+      case 'reconnect_url':
+        this._logWithDate(`Received new reconnect URL: ${message.url}`);
+        this.wsUrl = message.url;
+        break;
 
-      if (message.text.startsWith('admin')) {
-        if (participant.admin) {
-          const messageParts = message.text.split(' ');
-          switch (messageParts[1]) {
-            case 'help':
-              this.messageService.adminHelp();
-              break;
-            case 'setResponsible':
-              this._changeResponsible(messageParts[2]);
-              break;
-            case 'skip':
-              this._skipNextMeeting();
-              break;
-            case 'start':
-              this._setupOneTimeJobs();
-              break;
-            case 'state':
-              this.messageService.state();
-              break;
-            default:
-              this.messageService.unknownCommand(participant.username, message.text);
-              break;
+      case 'message':
+        if (message.user && !message.bot_id) {
+          const participant = this.model.getParticipantFromId(message.user);
+          if (!participant) {
+            this._reportError(`Unknown user id: ${message.user}`);
+            this._logWithDate(message);
+            return;
+          }
+
+          if (message.text.startsWith('admin')) {
+            if (participant.admin) {
+              const messageParts = message.text.split(' ');
+              switch (messageParts[1]) {
+                case 'help':
+                  this.messageService.adminHelp();
+                  break;
+                case 'setResponsible':
+                  this._changeResponsible(messageParts[2]);
+                  break;
+                case 'skip':
+                  this._skipNextMeeting();
+                  break;
+                case 'start':
+                  this._setupOneTimeJobs();
+                  break;
+                case 'state':
+                  this.messageService.state();
+                  break;
+                default:
+                  this.messageService.unknownCommand(participant.username, message.text);
+                  break;
+              }
+            }
+            else {
+              this.messageService.notAdmin(participant.username);
+            }
+          }
+          else {
+            switch (message.text.toLowerCase()) {
+              case 'help':
+              case '?':
+                this.messageService.help(participant);
+                break;
+              case 'uptime':
+                this._printUptime(participant.username);
+                break;
+              case 'status':
+                this.messageService.status(participant.username);
+                break;
+              case 'next':
+                this.messageService.next(participant.username);
+                break;
+              case 'list':
+                this.messageService.list(participant.username);
+                break;
+              case 'accept':
+                this._accept(participant);
+                break;
+              case 'reject':
+                this._reject(participant);
+                break;
+              case 'yes':
+                this._attending(participant);
+                break;
+              case 'no':
+                this._notAttending(participant);
+                break;
+              default:
+                this.messageService.unknownCommand(participant.username, message.text);
+                break;
+            }
           }
         }
-        else {
-          this.messageService.notAdmin(participant.username);
-        }
-      }
-      else {
-        switch (message.text.toLowerCase()) {
-          case 'help':
-          case '?':
-            this.messageService.help(participant);
-            break;
-          case 'uptime':
-            this._printUptime(participant.username);
-            break;
-          case 'status':
-            this.messageService.status(participant.username);
-            break;
-          case 'next':
-            this.messageService.next(participant.username);
-            break;
-          case 'list':
-            this.messageService.list(participant.username);
-            break;
-          case 'accept':
-            this._accept(participant);
-            break;
-          case 'reject':
-            this._reject(participant);
-            break;
-          case 'yes':
-            this._attending(participant);
-            break;
-          case 'no':
-            this._notAttending(participant);
-            break;
-          default:
-            this.messageService.unknownCommand(participant.username, message.text);
-            break;
-        }
-      }
+        break;
     }
   }
 
