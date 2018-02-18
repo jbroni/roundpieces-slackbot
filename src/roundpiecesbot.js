@@ -55,6 +55,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _setup(error, data) {
+    //TODO Read persisted state
     if (error) {
       this._reportError(error);
     }
@@ -110,6 +111,7 @@ class RoundpiecesBot extends Bot {
   }
 
   _persistState(storeState) {
+    //TODO Participants should be part of the redux store
     const state = {};
     state.store = storeState;
     /* eslint-disable arrow-body-style */
