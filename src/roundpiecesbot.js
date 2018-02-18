@@ -109,7 +109,19 @@ class RoundpiecesBot extends Bot {
     }
   }
 
-  _persistState(state) {
+  _persistState(storeState) {
+    const state = {};
+    state.store = storeState;
+    /* eslint-disable arrow-body-style */
+    state.participants = this.model.participants.map((participant) => {
+      return {
+        username: participant.username,
+        responsible: participant.responsible,
+        attending: participant.attending
+      };
+    });
+    /* eslint-enable arrow-body-style */
+
     fs.writeFile('state.json', JSON.stringify(state), (error) => {
       if (error) {
         this._logWithDate(`Failed to persist state: ${error}.\n State was ${JSON.stringify(state)}`);
@@ -302,6 +314,7 @@ class RoundpiecesBot extends Bot {
         this._reportError(`Failed to save list due to ${error}. List is currently: ${list}`);
       }
     });
+    this._persistState(this.state);
   }
 
   _reject(participant) {
@@ -318,6 +331,7 @@ class RoundpiecesBot extends Bot {
           this.messageService.notifyNewResponsible(participant);
         }
       }
+      this._persistState(this.state);
     }
   }
 
@@ -356,6 +370,7 @@ class RoundpiecesBot extends Bot {
     if (this._canChangeAttendanceStatus(participant)) {
       participant.attending = AttendanceEnum.ATTENDING;
       this.messageService.attending(participant.username);
+      this._persistState(this.state);
     }
   }
 
@@ -363,6 +378,7 @@ class RoundpiecesBot extends Bot {
     if (this._canChangeAttendanceStatus(participant)) {
       participant.attending = AttendanceEnum.NOT_ATTENDING;
       this.messageService.notAttending(participant.username);
+      this._persistState(this.state);
     }
   }
 
