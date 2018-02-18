@@ -81,6 +81,7 @@ class RoundpiecesBot extends Bot {
 
   _onStateChanged(state) {
     if (state !== this.previousState) {
+      this._persistState(state);
       this._logWithDate(`State changed from ${this.previousState.type} to ${state.type}`);
       this.previousState = state;
       switch (state.type) {
@@ -106,6 +107,14 @@ class RoundpiecesBot extends Bot {
           break;
       }
     }
+  }
+
+  _persistState(state) {
+    fs.writeFile('state.json', JSON.stringify(state), (error) => {
+      if (error) {
+        this._logWithDate(`Failed to persist state: ${error}.\n State was ${JSON.stringify(state)}`);
+      }
+    });
   }
 
   _setupCronJobs() {
