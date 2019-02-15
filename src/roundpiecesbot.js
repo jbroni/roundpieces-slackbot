@@ -31,7 +31,7 @@ class RoundpiecesBot extends Bot {
     this.on('open', () => this._logWithDate('Web socket connection opened'));
     this.on('close', () => {
       this._logWithDate('Web socket connection closed. Attempting to reconnect.');
-      this.connect();
+      this.login();
     });
     this.on('error', () => this._logWithDate('Error while connecting to slack'));
   }
@@ -49,9 +49,11 @@ class RoundpiecesBot extends Bot {
   }
 
   _onStart() {
-    this.startTime = Date.now();
+    if (!this.startTime) {
+      this.startTime = Date.now();
 
-    fs.readFile(this.settings.listPath, 'utf8', (error, data) => this._setup(error, data));
+      fs.readFile(this.settings.listPath, 'utf8', (error, data) => this._setup(error, data));
+    }
   }
 
   _setup(error, data) {
