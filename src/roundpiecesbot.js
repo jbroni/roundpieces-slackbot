@@ -31,7 +31,7 @@ class RoundpiecesBot extends Bot {
     this.on('open', () => this._logWithDate('Web socket connection opened'));
     this.on('close', () => {
       this._logWithDate('Web socket connection closed. Attempting to reconnect.');
-      this.connect();
+      this.login();
     });
     this.on('error', () => this._logWithDate('Error while connecting to slack'));
   }
