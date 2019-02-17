@@ -6,6 +6,7 @@ const listPath = process.env.ROUNDPIECES_LIST_PATH;
 
 const startSearch = '30 00 9 * * 4'; // 09.00.30 Thursdays
 const endSearch = '30 00 12 * * 4'; // 12.00.30 Thursdays
+const sendReminder = '30 00 8 * * 5'; // 08.00.30 Fridays
 const resetSearch = '30 00 9 * * 5'; // 09.00.30 Fridays
 
 if (token && adminUserName && listPath) {
@@ -17,6 +18,7 @@ if (token && adminUserName && listPath) {
     cronRanges: {
       start: startSearch,
       end: endSearch,
+      sendReminder,
       reset: resetSearch
     },
     log: true
