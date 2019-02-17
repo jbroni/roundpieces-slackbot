@@ -115,6 +115,7 @@ class RoundpiecesBot extends Bot {
     new CronJob(cronRanges.start, () => this._startResponsibleSearch(), null, true);
     new CronJob(cronRanges.end, () => this._endResponsibleSearch(), null, true);
     new CronJob(cronRanges.reset, () => this._reset(), null, true);
+    new CronJob(cronRanges.sendReminder, () => this._sendReminder(), null, true);
   }
 
   _setupOneTimeJobs() {
@@ -183,6 +184,12 @@ class RoundpiecesBot extends Bot {
   _onResetting() {
     this.model.reset();
     store.dispatch({type: Actions.RESAT});
+  }
+
+  _sendReminder() {
+    if (store.getState() === States.AWAITING_MEETING) {
+      this.messageService.reminder();
+    }
   }
 
   _onMessage(message) {

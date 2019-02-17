@@ -150,6 +150,20 @@ If you won't attend, please respond \`no\`.`));
     this.sendMessage(userName, 'Alright, I\'ll ask the next one on the list to bring them instead.');
   }
 
+  reminder() {
+    const attending = this.model.getParticipantLinksByAttendance(AttendanceEnum.ATTENDING);
+    const unknown = this.model.getParticipantLinksByAttendance(AttendanceEnum.UNKNOWN);
+
+    let bringCake = '';
+    if (attending.length + unknown.length < this.model.getParticipantCount() / 2) {
+      bringCake = 'Please also remember to *bring cake*!';
+    }
+
+    this.sendMessage(this.model.getResponsible().username,
+        `Remember to bring roundpieces for *${attending.length + unknown.length}* people today! ${bringCake}`
+    );
+  }
+
   responsibleChanged(responsible) {
     const responsibleLink = this.model.getParticipantFromUserName(responsible).link;
     this._messageAdmin(`${responsibleLink} has been set as responsible and list has been updated.`);
