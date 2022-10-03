@@ -64,12 +64,13 @@ class RoundpiecesBot extends Bot {
     }
   }
 
-  _setup(error, data) {
+  async _setup(error, data) {
     if (error) {
       this._reportError(error);
     }
     else {
-      this.model.users = this.users;
+      const users = await this.getUsers();
+      this.model.users = users.members;
       this.model.participants = data;
       if (this.model.getParticipantCount() < 1) {
         this._reportError('No participants in list');
