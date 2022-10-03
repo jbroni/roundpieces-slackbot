@@ -17,7 +17,15 @@ class RoundpiecesBot extends Bot {
     this.settings = settings;
     this.model = new Model(this.settings.adminUserName);
     this.messageService = new MessageService(
-        (userName, message) => this.postMessageToUser(userName, message, {as_user: true}),
+        (userName, message) => {
+          const userId = this.model._getUserIdFromUserName(userName);
+          if (!userId) {
+            this._logWithDate(`Unknown user id ${userId} for ${userName}`);
+            return;
+          } 
+          this._logWithDate(`Posting message to ${userId} (${userName})`);
+          this.postMessage(userId, message, {as_user: true});
+        },
         (...log) => this._logWithDate(log),
         this.model,
         store
@@ -203,10 +211,11 @@ class RoundpiecesBot extends Bot {
         if (message.user && !message.bot_id) {
           const participant = this.model.getParticipantFromId(message.user);
           if (!participant) {
-            this._reportError(`Unknown user id: ${message.user}`);
+            //this._reportError(`Unknown user id: ${message.user}`);
             this._logWithDate(message);
             return;
           }
+          this._logWithDate(`Got message from ${message.user} - ${participant.username}`);
 
           if (message.text.startsWith('admin')) {
             if (participant.admin) {

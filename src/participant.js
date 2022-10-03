@@ -8,6 +8,7 @@ const AttendanceEnum = Object.freeze({
 
 class Participant {
   constructor(id, username, admin) {
+    console.log(`Creating user for ${username} with id ${id}`);
     this.id = id;
     this.username = username;
     this.admin = admin;
