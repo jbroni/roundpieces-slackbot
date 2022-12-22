@@ -212,7 +212,6 @@ class RoundpiecesBot extends Bot {
         if (message.user && !message.bot_id) {
           const participant = this.model.getParticipantFromId(message.user);
           if (!participant) {
-            //this._reportError(`Unknown user id: ${message.user}`);
             this._logWithDate(message);
             return;
           }
